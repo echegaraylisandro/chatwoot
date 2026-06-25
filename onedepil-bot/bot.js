@@ -241,18 +241,30 @@ async function handleMessage(sock, msg) {
 
   // ── FLUJO PASO A PASO ────────────────────────────────────────────────────────
 
+  // PASO: turno ya anotado — cualquier mensaje de seguimiento responde sin reiniciar
+  if (conv?.step === 'turno_anotado') {
+    const { desc } = conv.data;
+    if (matchesAny(body, ['gracias','ok','perfecto','genial','dale','listo','buenisimo','buenísimo','excelente'])) {
+      await sock.sendMessage(jid, { text: `De nada, te avisamos cuando tengamos el turno confirmado. ¡Hasta pronto!` });
+      clearConv(jid);
+    } else {
+      await sock.sendMessage(jid, { text: `Ya tenemos anotada tu solicitud para ${desc}. Cuando quieras consultar otra cosa, escribime.` });
+    }
+    return;
+  }
+
   // PASO: esperando día/hora para turno
   if (conv?.step === 'esperando_horario') {
     const { tratamiento, tipo } = conv.data;
     const esConsulta = tipo === 'consulta';
     const monto = esConsulta ? PRECIO_CONSULTA : Math.round((conv.data.precio || 0) * 0.20);
-    const desc = esConsulta ? `Consulta con Dra. Sabrina Quiroga` : tratamiento;
+    const desc = esConsulta ? `Consulta con Dra. Sabrina Quiroga` : (tratamiento || 'el tratamiento');
 
     await sock.sendMessage(jid, {
-      text: `Perfecto, anotamos tu solicitud para ${desc}. Te confirmo el turno a la brevedad y te paso el link de pago para asegurar el lugar.${monto > 0 ? ' El monto a reservar es ' + fmtPeso(monto) + (esConsulta ? ' (se descuenta cuando realizás el tratamiento)' : ' (seña del 20%).') : ''} Quedo a disposicion.`,
+      text: `Perfecto, anotamos tu solicitud para ${desc}. Te confirmo el turno a la brevedad y te paso el link de pago para asegurar el lugar.${monto > 0 ? ' El monto a reservar es ' + fmtPeso(monto) + (esConsulta ? ' (se descuenta cuando realizás el tratamiento).' : ' (seña del 20%).') : ''} Quedo a disposicion.`,
     });
     await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 Tratamiento: ${desc}\n🗓️ Preferencia horaria: "${body}"\n${monto > 0 ? `💰 Seña a cobrar: ${fmtPeso(monto)}\n` : ''}⚡ Confirmar y enviar link Naranja X`);
-    clearConv(jid);
+    setConv(jid, 'turno_anotado', { desc });
     return;
   }
 
@@ -278,10 +290,17 @@ async function handleMessage(sock, msg) {
   // PASO: el paciente respondió qué tratamiento le interesa
   if (conv?.step === 'esperando_tratamiento') {
     const trat = detectarTratamiento(body);
+    const nB = normalize(body);
+    const esConsultaDirecta = nB.includes('consulta') || nB.includes('sabrina') || nB.includes('turno') || nB.includes('agend');
 
     if (trat && INFO_TRATAMIENTOS[trat]) {
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[trat] });
       setConv(jid, 'esperando_previos', { tratamiento: trat });
+    } else if (esConsultaDirecta) {
+      await sock.sendMessage(jid, {
+        text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
+      });
+      setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
     } else {
       await sock.sendMessage(jid, {
         text: `Contame un poco más — ¿qué es lo que querés mejorar o tratar? Así te oriento mejor.`,
@@ -353,10 +372,20 @@ async function handleMessage(sock, msg) {
   const quiereServicios = matchesAny(body, cfg.KEYWORDS.servicios);
 
   if (quiereTurno) {
-    await sock.sendMessage(jid, {
-      text: `${saludoHora()}${nombre ? ' ' + nombre : ''}. ¿Qué tratamiento o consulta querés hacer?`,
-    });
-    setConv(jid, 'esperando_tratamiento');
+    // Si el mensaje ya incluye día/hora ("agendame el martes a las 16"), ir directo al horario
+    const tieneDia = /lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo|\d{1,2}\/\d{1,2}|\d{1,2}hs|a las \d/.test(normalize(body));
+    if (tieneDia) {
+      await sock.sendMessage(jid, {
+        text: `Perfecto, anotamos tu solicitud. Te confirmo el turno a la brevedad y te paso el link de pago para asegurar el lugar. Quedo a disposicion.`,
+      });
+      await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🗓️ Preferencia horaria: "${body}"\n⚡ Confirmar tratamiento y enviar link`);
+      setConv(jid, 'turno_anotado', { desc: 'el turno solicitado' });
+    } else {
+      await sock.sendMessage(jid, {
+        text: `${saludoHora()}${nombre ? ' ' + nombre : ''}. ¿Qué tratamiento o consulta querés hacer?`,
+      });
+      setConv(jid, 'esperando_tratamiento');
+    }
     return;
   }
 
