@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ONE DEPIL — Panel de Gestión</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f1e;--surface:#1a1a30;--surface2:#232340;--border:#2e2e50;
+  --gold:#c9a96e;--gold2:#e8d5b0;--text:#f0ece0;--text2:#a09880;
+  --green:#4caf91;--red:#e05c7a;--blue:#6c9fe0;--purple:#9b7fe0;
+  --orange:#e09460;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh}
+a{color:var(--gold);text-decoration:none}
+button{cursor:pointer;border:none;font-family:inherit;font-size:13px}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+h2{font-size:18px;font-weight:600;color:var(--gold2)}
+h3{font-size:15px;font-weight:600;color:var(--text)}
+
+/* HEADER */
+#header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:12px}
+.logo-circle{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#8b5e3c);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.brand-name{font-size:17px;font-weight:700;color:var(--gold2);line-height:1.1}
+.brand-sub{font-size:11px;color:var(--text2)}
+#clock{font-size:13px;color:var(--text2);text-align:right}
+#clock .time{font-size:20px;font-weight:700;color:var(--gold);display:block}
+
+/* NAV */
+#nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none}
+#nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:12px 18px;color:var(--text2);background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:.2s;font-size:13px}
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:var(--surface2)}
+
+/* LAYOUT */
+#app{padding:16px;max-width:1200px;margin:0 auto}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.card-title{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:var(--gold);display:block}
+.kpi-label{font-size:11px;color:var(--text2);margin-top:4px}
+.kpi-sub{font-size:11px;color:var(--green)}
+
+/* GRID HELPERS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{background:var(--surface2);color:var(--text2);font-size:11px;text-transform:uppercase;padding:8px 10px;text-align:left;font-weight:600}
+.tbl td{padding:9px 10px;border-top:1px solid var(--border);vertical-align:middle}
+.tbl tr:hover td{background:var(--surface2)}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#1a3d30;color:var(--green)}
+.badge-red{background:#3d1a25;color:var(--red)}
+.badge-gold{background:#3d3015;color:var(--gold)}
+.badge-blue{background:#1a2a3d;color:var(--blue)}
+.badge-gray{background:var(--surface2);color:var(--text2)}
+.badge-purple{background:#2a1a3d;color:var(--purple)}
+.badge-orange{background:#3d2a1a;color:var(--orange)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-weight:600;transition:.15s}
+.btn-gold{background:var(--gold);color:#1a1408}
+.btn-gold:hover{background:var(--gold2)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-red{background:#3d1a25;color:var(--red);border:1px solid #5c2535}
+.btn-green{background:#1a3d30;color:var(--green);border:1px solid #255c45}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-wa{background:#1a3d25;color:#25d366;border:1px solid #25d366}
+.btn-wa:hover{background:#25d366;color:#0d1f12}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-row.solo{grid-template-columns:1fr}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-group{margin-bottom:10px}
+
+/* MODAL */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+#modal-overlay.open{display:flex}
+#modal-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-header h3{color:var(--gold2)}
+
+/* AGENDA */
+.agenda-day{margin-bottom:20px}
+.agenda-day-title{font-size:13px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px}
+.turno-card{background:var(--surface2);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.turno-info{flex:1}
+.turno-hora{font-size:15px;font-weight:700;color:var(--gold)}
+.turno-paciente{font-size:14px;font-weight:600}
+.turno-servicio{font-size:12px;color:var(--text2)}
+.turno-prof{font-size:11px;color:var(--purple)}
+.turno-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* STOCK */
+.stock-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.stock-bar-wrap{width:80px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.stock-bar{height:100%;border-radius:3px}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* SECTION HEADER */
+.sec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+/* PATIENT CARD */
+.pac-card{background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;border:1px solid transparent}
+.pac-card:hover{border-color:var(--gold)}
+
+/* COBRO ROW */
+.cobro-row{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap input{padding-left:32px}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px}
+
+/* PROGRESS */
+.progress-wrap{margin:6px 0}
+.progress-bar-bg{background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;margin-top:4px}
+.progress-bar-fill{height:100%;border-radius:4px;transition:width .4s}
+
+/* REPORT TABLE */
+.rep-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.rep-row:last-child{border-bottom:none}
+.rep-row.total{font-weight:700;color:var(--gold);margin-top:4px;border-top:2px solid var(--gold)}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="brand">
+    <div class="logo-circle">OD</div>
+    <div>
+      <div class="brand-name">ONE DEPIL</div>
+      <div class="brand-sub">Dra. Sabrina Quiroga · Ayres Village</div>
+    </div>
+  </div>
+  <div id="clock">
+    <span class="time" id="time-display">--:--</span>
+    <span id="date-display"></span>
+  </div>
+</div>
+
+<div id="nav">
+  <button class="nav-btn active" onclick="goTab('inicio')">🏠 Inicio</button>
+  <button class="nav-btn" onclick="goTab('agenda')">📅 Agenda</button>
+  <button class="nav-btn" onclick="goTab('pacientes')">👥 Pacientes</button>
+  <button class="nav-btn" onclick="goTab('caja')">💰 Caja</button>
+  <button class="nav-btn" onclick="goTab('stock')">📦 Stock</button>
+  <button class="nav-btn" onclick="goTab('reportes')">📊 Reportes</button>
+  <button class="nav-btn" onclick="goTab('config')">⚙️ Config</button>
+</div>
+
+<div id="app">
+
+<!-- ===== INICIO ===== -->
+<div id="tab-inicio" class="tab-panel active">
+  <div id="kpi-area" class="kpi-grid"></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="sec-header">
+          <div class="card-title">Turnos de Hoy</div>
+          <button class="btn btn-gold btn-sm" onclick="openModalTurno()">+ Nuevo</button>
+        </div>
+        <div id="turnos-hoy-list"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Cobros Recientes</div>
+        <div id="cobros-recientes-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Stock con Alerta</div>
+        <div id="stock-alerta-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AGENDA ===== -->
+<div id="tab-agenda" class="tab-panel">
+  <div class="sec-header">
+    <h2>📅 Agenda</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="date" id="agenda-fecha" style="width:150px" onchange="renderAgenda()"/>
+      <button class="btn btn-gold" onclick="openModalTurno()">+ Turno</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="filtrarAgendaProf('')" id="fpbtn-todos">Todos</button>
+      <div id="prof-filter-btns"></div>
+    </div>
+  </div>
+  <div id="agenda-container"></div>
+</div>
+
+<!-- ===== PACIENTES ===== -->
+<div id="tab-pacientes" class="tab-panel">
+  <div class="sec-header">
+    <h2>👥 Pacientes</h2>
+    <button class="btn btn-gold" onclick="openModalPaciente()">+ Paciente</button>
+  </div>
+  <div class="search-wrap"><input type="text" id="pac-search" placeholder="Buscar paciente…" oninput="renderPacientes()"/></div>
+  <div id="pacientes-list"></div>
+</div>
+
+<!-- ===== CAJA ===== -->
+<div id="tab-caja" class="tab-panel">
+  <div class="sec-header">
+    <h2>💰 Caja</h2>
+    <div style="display:flex;gap:8px">
+      <input type="date" id="caja-fecha" style="width:150px" onchange="renderCaja()"/>
+      <button class="btn btn-gold" onclick="openModalCobro()">+ Cobro</button>
+    </div>
+  </div>
+  <div id="caja-kpis" class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"></div>
+  <div class="card">
+    <div class="card-title">Movimientos del Día</div>
+    <div id="cobros-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Deudas Pendientes</div>
+    <div id="deudas-list"></div>
+  </div>
+</div>
+
+<!-- ===== STOCK ===== -->
+<div id="tab-stock" class="tab-panel">
+  <div class="sec-header">
+    <h2>📦 Stock</h2>
+    <button class="btn btn-gold" onclick="openModalStock()">+ Item</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-ghost btn-sm" onclick="filtrarStock('todos')" id="sbtn-todos">Todos</button>
+    <button class="btn btn-ghost btn-sm" onclick="filtrarStock('tratamiento')" id="sbtn-tratamiento">Tratamientos</button>
+    <button class="btn btn-ghost btn-sm" onclick="filtrarStock('limpieza')" id="sbtn-limpieza">Limpieza</button>
+    <button class="btn btn-ghost btn-sm" onclick="filtrarStock('venta')" id="sbtn-venta">Venta a Clientes</button>
+  </div>
+  <div class="card">
+    <div id="stock-list"></div>
+  </div>
+</div>
+
+<!-- ===== REPORTES ===== -->
+<div id="tab-reportes" class="tab-panel">
+  <div class="sec-header">
+    <h2>📊 Reportes</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="rep-mes" style="width:120px" onchange="renderReportes()">
+        <option value="0">Enero</option><option value="1">Febrero</option>
+        <option value="2">Marzo</option><option value="3">Abril</option>
+        <option value="4">Mayo</option><option value="5">Junio</option>
+        <option value="6">Julio</option><option value="7">Agosto</option>
+        <option value="8">Septiembre</option><option value="9">Octubre</option>
+        <option value="10">Noviembre</option><option value="11">Diciembre</option>
+      </select>
+      <select id="rep-anio" style="width:90px" onchange="renderReportes()"></select>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-title">Ingresos por Servicio</div>
+        <div id="rep-servicios"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Gastos Fijos</div>
+        <div id="rep-gastos"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Resultado del Mes</div>
+        <div id="rep-resultado"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Desglose por Profesional</div>
+    <div id="rep-profs"></div>
+  </div>
+</div>
+
+<!-- ===== CONFIG ===== -->
+<div id="tab-config" class="tab-panel">
+  <h2 style="margin-bottom:16px">⚙️ Configuración</h2>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Datos de la Clínica</div>
+      <div class="form-group"><label>Nombre</label><input type="text" id="cfg-nombre" value="ONE DEPIL"/></div>
+      <div class="form-group"><label>WhatsApp (con código país)</label><input type="text" id="cfg-wa" value="5492646725551"/></div>
+      <div class="form-group"><label>Instagram</label><input type="text" id="cfg-ig" value="@onedepil_oficial"/></div>
+      <div class="form-group"><label>Dirección</label><input type="text" id="cfg-dir" value="Pase de Compras, Ayres Village Open Mall"/></div>
+      <div class="form-group"><label>Horario</label><input type="text" id="cfg-horario" value="Lunes a Viernes 15-21 · Sábados 9-15"/></div>
+      <button class="btn btn-gold" onclick="saveConfig()">Guardar</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Profesionales</div>
+      <div id="profs-config-list"></div>
+      <hr class="divider"/>
+      <div class="form-row">
+        <div class="form-group"><label>Nombre</label><input type="text" id="cfg-prof-nombre" placeholder="Dra. / Dr."/></div>
+        <div class="form-group"><label>Especialidad</label><input type="text" id="cfg-prof-esp" placeholder="Estética…"/></div>
+      </div>
+      <div class="form-group"><label>WhatsApp (opcional)</label><input type="text" id="cfg-prof-wa" placeholder="549264…"/></div>
+      <button class="btn btn-gold btn-sm" onclick="addProf()">+ Agregar Profesional</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Servicios y Precios</div>
+    <div id="servicios-config-list"></div>
+    <hr class="divider"/>
+    <div class="form-row">
+      <div class="form-group"><label>Nombre del Servicio</label><input type="text" id="cfg-svc-nombre" placeholder="Mesoterapia Facial"/></div>
+      <div class="form-group"><label>Precio ($)</label><input type="number" id="cfg-svc-precio" placeholder="45000"/></div>
+    </div>
+    <div class="form-group"><label>Categoría</label>
+      <select id="cfg-svc-cat">
+        <option value="estetica">Estética Facial</option>
+        <option value="corporal">Corporal</option>
+        <option value="depilacion">Depilación Definitiva</option>
+        <option value="capilar">Capilar</option>
+        <option value="medico">Médico / Inyectable</option>
+        <option value="wellness">Wellness / Masajes</option>
+        <option value="suero">Suero Terapia</option>
+        <option value="gine">Ginecología</option>
+        <option value="endo">Endocrinología</option>
+      </select>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="addServicio()">+ Agregar Servicio</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Gastos Fijos Mensuales</div>
+    <div id="gastos-config-list"></div>
+    <hr class="divider"/>
+    <div class="form-row">
+      <div class="form-group"><label>Concepto</label><input type="text" id="cfg-gasto-nombre" placeholder="Alquiler"/></div>
+      <div class="form-group"><label>Monto ($)</label><input type="number" id="cfg-gasto-monto" placeholder="1700000"/></div>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="addGasto()">+ Agregar Gasto</button>
+  </div>
+  <div class="card" style="margin-top:8px">
+    <div class="card-title">Exportar / Importar Datos</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-ghost" onclick="exportarDatos()">⬇️ Exportar JSON</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">⬆️ Importar JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarDatos(event)"/>
+      <button class="btn btn-red" onclick="if(confirm('¿Borrar TODOS los datos?'))resetDatos()">🗑️ Resetear</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL TURNO -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div id="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Nuevo Turno</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ========== STORAGE ==========
+let _mem = {};
+function ls(k, fb){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):fb}catch(e){return _mem[k]!==undefined?_mem[k]:fb}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){_mem[k]=v}}
+
+// ========== DEFAULT DATA ==========
+const DEFAULT_PROFS = [
+  {id:'p1',nombre:'Dra. Sabrina Quiroga',esp:'Estética',wa:'5492646725551',color:'#c9a96e'},
+  {id:'p2',nombre:'Dr. Andrés Echegaray',esp:'Ginecología',wa:'',color:'#6c9fe0'},
+  {id:'p3',nombre:'Dr. Rolando Ribaudo',esp:'Estética / Inyectables',wa:'',color:'#9b7fe0'},
+  {id:'p4',nombre:'Dr. Walter Antuña',esp:'Suero Terapias / Med. Ortomolecular',wa:'',color:'#4caf91'},
+  {id:'p5',nombre:'Dra. Otiñano',esp:'Endocrinología / Descenso de Peso',wa:'',color:'#e09460'},
+  {id:'p6',nombre:'Profesional Wellness',esp:'Masajes / Wellness Corporal',wa:'',color:'#e05c7a'},
+  {id:'p7',nombre:'Técnica Depilación',esp:'Depilación Definitiva',wa:'',color:'#a09880'},
+];
+
+const DEFAULT_SERVICIOS = [
+  {id:'s1',nombre:'Depilación Definitiva',precio:65000,cat:'depilacion'},
+  {id:'s2',nombre:'Botox',precio:260000,cat:'medico'},
+  {id:'s3',nombre:'Endolift Facial',precio:180000,cat:'estetica'},
+  {id:'s4',nombre:'Endolift Corporal',precio:200000,cat:'corporal'},
+  {id:'s5',nombre:'Endimed Facial Intensive',precio:160000,cat:'estetica'},
+  {id:'s6',nombre:'Endimed Facial FSR',precio:35000,cat:'estetica'},
+  {id:'s7',nombre:'Endimed Facial Continuo',precio:30000,cat:'estetica'},
+  {id:'s8',nombre:'Endimed Corporal',precio:45000,cat:'corporal'},
+  {id:'s9',nombre:'Mesoterapia Facial',precio:45000,cat:'estetica'},
+  {id:'s10',nombre:'Mesoterapia Corporal',precio:45000,cat:'corporal'},
+  {id:'s11',nombre:'Mesoterapia Capilar',precio:35000,cat:'capilar'},
+  {id:'s12',nombre:'Plasma Rico en Plaquetas',precio:55000,cat:'medico'},
+  {id:'s13',nombre:'Alquimia',precio:40000,cat:'estetica'},
+  {id:'s14',nombre:'Limpieza Facial',precio:35000,cat:'estetica'},
+  {id:'s15',nombre:'CM Slim',precio:35000,cat:'corporal'},
+  {id:'s16',nombre:'Encurve',precio:40000,cat:'corporal'},
+  {id:'s17',nombre:'Suero Terapia',precio:60000,cat:'suero'},
+  {id:'s18',nombre:'Masaje Terapéutico',precio:35000,cat:'wellness'},
+  {id:'s19',nombre:'Masaje Modelador',precio:40000,cat:'wellness'},
+  {id:'s20',nombre:'Consulta Ginecológica',precio:50000,cat:'gine'},
+  {id:'s21',nombre:'Consulta Endocrinológica',precio:60000,cat:'endo'},
+  {id:'s22',nombre:'Terapia Descenso de Peso',precio:80000,cat:'endo'},
+];
+
+const DEFAULT_GASTOS = [
+  {id:'g1',nombre:'Alquiler',monto:1700000},
+  {id:'g2',nombre:'Luz / Servicios',monto:280000},
+  {id:'g3',nombre:'RRSS / Marketing',monto:350000},
+  {id:'g4',nombre:'Insumos generales',monto:300000},
+  {id:'g5',nombre:'Botox (10 amp)',monto:2300000},
+  {id:'g6',nombre:'Cuota Endolift',monto:980000},
+  {id:'g7',nombre:'Bioquímica (plasma)',monto:14850},
+  {id:'g8',nombre:'Koibox',monto:100000},
+  {id:'g9',nombre:'Sueldos',monto:1400000},
+];
+
+const DEFAULT_STOCK = [
+  {id:'st1',nombre:'Ampollas Botox',cat:'tratamiento',stock:8,minimo:3,unidad:'amp'},
+  {id:'st2',nombre:'Suero Fisiológico 500ml',cat:'tratamiento',stock:15,minimo:5,unidad:'u'},
+  {id:'st3',nombre:'Agujas 30G',cat:'tratamiento',stock:50,minimo:20,unidad:'u'},
+  {id:'st4',nombre:'Guantes descartables (S)',cat:'tratamiento',stock:100,minimo:30,unidad:'u'},
+  {id:'st5',nombre:'Guantes descartables (M)',cat:'tratamiento',stock:80,minimo:30,unidad:'u'},
+  {id:'st6',nombre:'Campos estériles',cat:'tratamiento',stock:30,minimo:10,unidad:'u'},
+  {id:'st7',nombre:'Gel conductor endomed',cat:'tratamiento',stock:4,minimo:2,unidad:'kg'},
+  {id:'st8',nombre:'Plasma PRP kit',cat:'tratamiento',stock:5,minimo:3,unidad:'kit'},
+  {id:'st9',nombre:'Lavandina',cat:'limpieza',stock:3,minimo:2,unidad:'lt'},
+  {id:'st10',nombre:'Alcohol 70°',cat:'limpieza',stock:4,minimo:2,unidad:'lt'},
+  {id:'st11',nombre:'Detergente industrial',cat:'limpieza',stock:2,minimo:1,unidad:'lt'},
+  {id:'st12',nombre:'Crema hidratante post-trat.',cat:'venta',stock:8,minimo:3,unidad:'u'},
+  {id:'st13',nombre:'SPF 50+ facial',cat:'venta',stock:6,minimo:3,unidad:'u'},
+  {id:'st14',nombre:'Sérum vitamina C',cat:'venta',stock:4,minimo:2,unidad:'u'},
+];
+
+// ========== STATE ==========
+let STATE = {
+  profs: ls('od_profs', DEFAULT_PROFS),
+  servicios: ls('od_servicios', DEFAULT_SERVICIOS),
+  gastos: ls('od_gastos', DEFAULT_GASTOS),
+  turnos: ls('od_turnos', []),
+  pacientes: ls('od_pacientes', []),
+  cobros: ls('od_cobros', []),
+  stock: ls('od_stock', DEFAULT_STOCK),
+  config: ls('od_config', {nombre:'ONE DEPIL',wa:'5492646725551',ig:'@onedepil_oficial',dir:'Ayres Village Open Mall',horario:'Lunes a Viernes 15-21 · Sábados 9-15'}),
+};
+
+function save(){
+  lsSet('od_profs',STATE.profs);lsSet('od_servicios',STATE.servicios);
+  lsSet('od_gastos',STATE.gastos);lsSet('od_turnos',STATE.turnos);
+  lsSet('od_pacientes',STATE.pacientes);lsSet('od_cobros',STATE.cobros);
+  lsSet('od_stock',STATE.stock);lsSet('od_config',STATE.config);
+}
+
+// ========== UTILS ==========
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function today(){return new Date().toISOString().slice(0,10)}
+function fmtPeso(n){return '$'+Number(n||0).toLocaleString('es-AR')}
+function fmtFecha(d){if(!d)return '';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+function profById(id){return STATE.profs.find(p=>p.id===id)||{nombre:'—',esp:'',color:'#666'}}
+function svcById(id){return STATE.servicios.find(s=>s.id===id)||{nombre:'—',precio:0}}
+
+// ========== CLOCK ==========
+function tickClock(){
+  const n=new Date();
+  document.getElementById('time-display').textContent=n.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('date-display').textContent=n.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+}
+setInterval(tickClock,1000);tickClock();
+
+// ========== TABS ==========
+let currentTab='inicio';
+let agendaFiltroProf='';
+let stockFiltro='todos';
+
+function goTab(t){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('active')});
+  currentTab=t;
+  renderTab(t);
+}
+
+function renderTab(t){
+  if(t==='inicio')renderInicio();
+  else if(t==='agenda')renderAgenda();
+  else if(t==='pacientes')renderPacientes();
+  else if(t==='caja')renderCaja();
+  else if(t==='stock')renderStock();
+  else if(t==='reportes')renderReportes();
+  else if(t==='config')renderConfig();
+}
+
+// ========== INICIO ==========
+function renderInicio(){
+  // KPIs
+  const hoy=today();
+  const turnosHoy=STATE.turnos.filter(t=>t.fecha===hoy);
+  const cobrosHoy=STATE.cobros.filter(c=>c.fecha===hoy);
+  const ingresosHoy=cobrosHoy.reduce((a,c)=>a+(c.monto||0),0);
+  const deudas=STATE.cobros.filter(c=>c.estado==='deuda').reduce((a,c)=>a+(c.saldo||0),0);
+  const stockAlerta=STATE.stock.filter(s=>s.stock<=s.minimo).length;
+
+  document.getElementById('kpi-area').innerHTML=`
+    <div class="kpi"><span class="kpi-val">${turnosHoy.length}</span><div class="kpi-label">Turnos Hoy</div><div class="kpi-sub">${turnosHoy.filter(t=>t.estado==='confirmado').length} confirmados</div></div>
+    <div class="kpi"><span class="kpi-val">${fmtPeso(ingresosHoy)}</span><div class="kpi-label">Ingresos Hoy</div><div class="kpi-sub">${cobrosHoy.length} cobros</div></div>
+    <div class="kpi"><span class="kpi-val">${STATE.pacientes.length}</span><div class="kpi-label">Pacientes</div></div>
+    <div class="kpi"><span class="kpi-val" style="color:${deudas>0?'var(--red)':'var(--green)'}">${fmtPeso(deudas)}</span><div class="kpi-label">Deudas Pend.</div></div>
+    <div class="kpi"><span class="kpi-val" style="color:${stockAlerta>0?'var(--red)':'var(--green)'}">${stockAlerta}</span><div class="kpi-label">Alertas Stock</div></div>
+    <div class="kpi"><span class="kpi-val">${STATE.profs.length}</span><div class="kpi-label">Profesionales</div></div>
+  `;
+
+  // Turnos de hoy
+  const lista=turnosHoy.sort((a,b)=>a.hora.localeCompare(b.hora));
+  document.getElementById('turnos-hoy-list').innerHTML = lista.length===0
+    ? '<div style="color:var(--text2);text-align:center;padding:20px">Sin turnos para hoy</div>'
+    : lista.map(t=>turnoCardHTML(t,true)).join('');
+
+  // Cobros recientes
+  const recientes=[...STATE.cobros].sort((a,b)=>b.id.localeCompare(a.id)).slice(0,5);
+  document.getElementById('cobros-recientes-list').innerHTML = recientes.length===0
+    ? '<div style="color:var(--text2);padding:10px">Sin cobros registrados</div>'
+    : recientes.map(c=>`
+      <div class="cobro-row">
+        <div><div style="font-weight:600">${c.paciente||'—'}</div><div style="font-size:11px;color:var(--text2)">${fmtFecha(c.fecha)} · ${c.metodo||''}</div></div>
+        <div style="text-align:right"><div style="font-weight:700;color:var(--green)">${fmtPeso(c.monto)}</div><span class="badge ${c.estado==='pagado'?'badge-green':c.estado==='parcial'?'badge-gold':'badge-red'}">${c.estado}</span></div>
+      </div>`).join('');
+
+  // Stock alerta
+  const alertas=STATE.stock.filter(s=>s.stock<=s.minimo);
+  document.getElementById('stock-alerta-list').innerHTML = alertas.length===0
+    ? '<div style="color:var(--green);padding:10px">✓ Sin alertas de stock</div>'
+    : alertas.map(s=>`<div class="stock-item"><span>${s.nombre}</span><span style="color:var(--red);font-weight:700">${s.stock} ${s.unidad} ⚠️</span></div>`).join('');
+}
+
+function turnoCardHTML(t, compact=false){
+  const prof=profById(t.profId);
+  const svc=svcById(t.svcId);
+  const estadoBadge={pendiente:'badge-gold',confirmado:'badge-green',atendido:'badge-blue',cancelado:'badge-red'}[t.estado]||'badge-gray';
+  return`<div class="turno-card" style="border-left-color:${prof.color}">
+    <div class="turno-info">
+      <span class="turno-hora">${t.hora}</span>
+      <div class="turno-paciente">${t.paciente}</div>
+      <div class="turno-servicio">${svc.nombre} · ${fmtPeso(svc.precio)}</div>
+      <div class="turno-prof">${prof.nombre}</div>
+    </div>
+    <div class="turno-actions">
+      <span class="badge ${estadoBadge}">${t.estado}</span>
+      <button class="btn btn-wa btn-sm" onclick="waTurno('${t.id}')">WA</button>
+      <button class="btn btn-ghost btn-sm" onclick="editTurno('${t.id}')">✏️</button>
+      ${t.estado!=='atendido'?`<button class="btn btn-green btn-sm" onclick="atenderTurno('${t.id}')">✓</button>`:''}
+    </div>
+  </div>`;
+}
+
+// ========== AGENDA ==========
+function renderAgenda(){
+  const fechaEl=document.getElementById('agenda-fecha');
+  if(!fechaEl.value)fechaEl.value=today();
+  const fecha=fechaEl.value;
+
+  // Prof filter buttons
+  document.getElementById('prof-filter-btns').innerHTML=STATE.profs.map(p=>
+    `<button class="btn btn-ghost btn-sm" onclick="filtrarAgendaProf('${p.id}')" id="fpbtn-${p.id}" style="border-color:${agendaFiltroProf===p.id?p.color:'var(--border)'};color:${agendaFiltroProf===p.id?p.color:'var(--text2)'}">${p.nombre.split(' ').slice(-1)[0]}</button>`
+  ).join('');
+
+  const todos=document.getElementById('fpbtn-todos');
+  if(todos){todos.style.borderColor=agendaFiltroProf===''?'var(--gold)':'var(--border)';todos.style.color=agendaFiltroProf===''?'var(--gold)':'var(--text2)'}
+
+  let turnos=STATE.turnos.filter(t=>t.fecha===fecha);
+  if(agendaFiltroProf)turnos=turnos.filter(t=>t.profId===agendaFiltroProf);
+  turnos.sort((a,b)=>a.hora.localeCompare(b.hora));
+
+  // Group by prof
+  const porProf={};
+  turnos.forEach(t=>{if(!porProf[t.profId])porProf[t.profId]=[];porProf[t.profId].push(t)});
+
+  let html='';
+  if(turnos.length===0){
+    html='<div class="card" style="text-align:center;padding:30px;color:var(--text2)">Sin turnos para esta fecha</div>';
+  } else {
+    Object.entries(porProf).forEach(([pid,ts])=>{
+      const prof=profById(pid);
+      html+=`<div class="agenda-day"><div class="agenda-day-title" style="color:${prof.color}">${prof.nombre} — ${prof.esp}</div>`;
+      html+=ts.map(t=>turnoCardHTML(t)).join('');
+      html+=`</div>`;
+    });
+  }
+  document.getElementById('agenda-container').innerHTML=html;
+}
+
+function filtrarAgendaProf(pid){agendaFiltroProf=pid;renderAgenda();}
+
+// ========== PACIENTES ==========
+function renderPacientes(){
+  const q=(document.getElementById('pac-search')?.value||'').toLowerCase();
+  const lista=STATE.pacientes.filter(p=>
+    p.nombre.toLowerCase().includes(q)||
+    (p.tel&&p.tel.includes(q))
+  ).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+
+  document.getElementById('pacientes-list').innerHTML=lista.length===0
+    ? '<div style="color:var(--text2);text-align:center;padding:30px">Sin pacientes registrados</div>'
+    : lista.map(p=>{
+        const turnos=STATE.turnos.filter(t=>t.pacienteId===p.id).length;
+        const cobros=STATE.cobros.filter(c=>c.pacienteId===p.id).reduce((a,c)=>a+(c.monto||0),0);
+        return`<div class="pac-card" onclick="openModalPaciente('${p.id}')">
+          <div>
+            <div style="font-weight:600;font-size:15px">${p.nombre}</div>
+            <div style="font-size:12px;color:var(--text2)">${p.tel||''} ${p.email?'· '+p.email:''}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${p.notas||''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;color:var(--text2)">${turnos} turno${turnos!==1?'s':''}</div>
+            <div style="font-size:12px;color:var(--green)">${fmtPeso(cobros)}</div>
+            ${p.tel?`<button class="btn btn-wa btn-sm" style="margin-top:4px" onclick="event.stopPropagation();waContactar('${p.id}')">WhatsApp</button>`:''}
+          </div>
+        </div>`;
+      }).join('');
+}
+
+// ========== CAJA ==========
+function renderCaja(){
+  const fechaEl=document.getElementById('caja-fecha');
+  if(!fechaEl.value)fechaEl.value=today();
+  const fecha=fechaEl.value;
+  const cobros=STATE.cobros.filter(c=>c.fecha===fecha);
+  const total=cobros.reduce((a,c)=>a+(c.monto||0),0);
+  const efectivo=cobros.filter(c=>c.metodo==='efectivo').reduce((a,c)=>a+(c.monto||0),0);
+  const tarjeta=cobros.filter(c=>c.metodo==='tarjeta').reduce((a,c)=>a+(c.monto||0),0);
+  const transf=cobros.filter(c=>c.metodo==='transferencia').reduce((a,c)=>a+(c.monto||0),0);
+  const nxTotal=cobros.filter(c=>c.metodo==='naranjax').reduce((a,c)=>a+(c.monto||0),0);
+
+  document.getElementById('caja-kpis').innerHTML=`
+    <div class="kpi"><span class="kpi-val">${fmtPeso(total)}</span><div class="kpi-label">Total del Día</div></div>
+    <div class="kpi"><span class="kpi-val">${fmtPeso(efectivo)}</span><div class="kpi-label">Efectivo</div></div>
+    <div class="kpi"><span class="kpi-val">${fmtPeso(tarjeta)}</span><div class="kpi-label">Tarjeta</div></div>
+    <div class="kpi"><span class="kpi-val">${fmtPeso(transf)}</span><div class="kpi-label">Transferencia</div></div>
+    <div class="kpi"><span class="kpi-val" style="color:var(--orange)">${fmtPeso(nxTotal)}</span><div class="kpi-label">Naranja X</div></div>
+  `;
+
+  const sorted=[...cobros].sort((a,b)=>b.id.localeCompare(a.id));
+  document.getElementById('cobros-list').innerHTML=sorted.length===0
+    ? '<div style="color:var(--text2);padding:20px;text-align:center">Sin movimientos</div>'
+    : sorted.map(c=>cobroRowHTML(c)).join('');
+
+  const deudas=STATE.cobros.filter(c=>c.estado!=='pagado'&&(c.saldo||0)>0);
+  document.getElementById('deudas-list').innerHTML=deudas.length===0
+    ? '<div style="color:var(--green);padding:10px">✓ Sin deudas pendientes</div>'
+    : deudas.map(c=>cobroRowHTML(c,true)).join('');
+}
+
+function cobroRowHTML(c,esDeuda=false){
+  const badge={pagado:'badge-green',parcial:'badge-gold',deuda:'badge-red'}[c.estado]||'badge-gray';
+  return`<div class="cobro-row">
+    <div style="flex:1">
+      <div style="font-weight:600">${c.paciente||'—'}</div>
+      <div style="font-size:11px;color:var(--text2)">${c.servicio||''} · ${fmtFecha(c.fecha)} · ${c.metodo||''}</div>
+    </div>
+    <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <div style="font-weight:700;color:var(--green)">${fmtPeso(c.monto)}</div>
+      ${c.estado!=='pagado'?`<div style="font-size:11px;color:var(--red)">Saldo: ${fmtPeso(c.saldo)}</div>`:''}
+      <span class="badge ${badge}">${c.estado}</span>
+      ${esDeuda?`<button class="btn btn-gold btn-sm" onclick="saldarDeuda('${c.id}')">Saldar</button>`:''}
+      ${c.metodo==='naranjax'&&c.nxLink?`<a href="${c.nxLink}" target="_blank" class="btn btn-ghost btn-sm" style="color:var(--orange)">Link NX</a>`:''}
+    </div>
+  </div>`;
+}
+
+// ========== STOCK ==========
+function renderStock(){
+  ['todos','tratamiento','limpieza','venta'].forEach(f=>{
+    const b=document.getElementById('sbtn-'+f);
+    if(b){b.style.borderColor=stockFiltro===f?'var(--gold)':'var(--border)';b.style.color=stockFiltro===f?'var(--gold)':'var(--text2)'}
+  });
+  let lista=STATE.stock;
+  if(stockFiltro!=='todos')lista=lista.filter(s=>s.cat===stockFiltro);
+  lista.sort((a,b)=>a.nombre.localeCompare(b.nombre));
+
+  document.getElementById('stock-list').innerHTML=lista.length===0
+    ? '<div style="color:var(--text2);text-align:center;padding:20px">Sin items</div>'
+    : lista.map(s=>{
+        const pct=Math.min(100,Math.round((s.stock/Math.max(s.minimo*3,s.stock,1))*100));
+        const color=s.stock<=s.minimo?'var(--red)':s.stock<=s.minimo*2?'var(--orange)':'var(--green)';
+        return`<div class="stock-item">
+          <div style="flex:1">
+            <div style="font-weight:600">${s.nombre}</div>
+            <div style="font-size:11px;color:var(--text2)">${{tratamiento:'Tratamiento',limpieza:'Limpieza',venta:'Venta'}[s.cat]||s.cat}</div>
+            <div class="progress-bar-bg" style="margin-top:4px"><div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          </div>
+          <div style="text-align:right;margin-left:12px;flex-shrink:0">
+            <div style="font-size:18px;font-weight:700;color:${color}">${s.stock}</div>
+            <div style="font-size:11px;color:var(--text2)">${s.unidad} · mín ${s.minimo}</div>
+            <div style="display:flex;gap:4px;margin-top:4px">
+              <button class="btn btn-ghost btn-sm" onclick="ajustarStock('${s.id}',-1)" style="padding:3px 8px">−</button>
+              <button class="btn btn-gold btn-sm" onclick="ajustarStock('${s.id}',1)" style="padding:3px 8px">+</button>
+              <button class="btn btn-ghost btn-sm" onclick="editStock('${s.id}')" style="padding:3px 8px">✏️</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+}
+
+function filtrarStock(f){stockFiltro=f;renderStock();}
+function ajustarStock(id,delta){
+  const s=STATE.stock.find(x=>x.id===id);if(!s)return;
+  s.stock=Math.max(0,s.stock+delta);save();renderStock();
+  if(s.stock<=s.minimo)toast('⚠️ '+s.nombre+' bajo mínimo');
+}
+
+// ========== REPORTES ==========
+function renderReportes(){
+  const mesEl=document.getElementById('rep-mes');
+  const anioEl=document.getElementById('rep-anio');
+  // Populate years
+  const currentYear=new Date().getFullYear();
+  if(!anioEl.innerHTML){
+    for(let y=currentYear-1;y<=currentYear+1;y++){
+      anioEl.innerHTML+=`<option value="${y}" ${y===currentYear?'selected':''}>${y}</option>`;
+    }
+  }
+  const mes=parseInt(mesEl.value);
+  const anio=parseInt(anioEl.value);
+
+  const cobros=STATE.cobros.filter(c=>{
+    const d=new Date(c.fecha);return d.getMonth()===mes&&d.getFullYear()===anio;
+  });
+
+  // Por servicio
+  const porSvc={};
+  cobros.forEach(c=>{
+    const k=c.servicio||'Otros';
+    if(!porSvc[k])porSvc[k]={monto:0,cant:0};
+    porSvc[k].monto+=(c.monto||0);porSvc[k].cant++;
+  });
+  const totalIngresos=cobros.reduce((a,c)=>a+(c.monto||0),0);
+
+  document.getElementById('rep-servicios').innerHTML=Object.entries(porSvc)
+    .sort((a,b)=>b[1].monto-a[1].monto)
+    .map(([k,v])=>`<div class="rep-row"><span>${k} <span style="color:var(--text2);font-size:11px">(${v.cant})</span></span><span>${fmtPeso(v.monto)}</span></div>`)
+    .join('')+`<div class="rep-row total"><span>TOTAL BRUTO</span><span>${fmtPeso(totalIngresos)}</span></div>`;
+
+  // Gastos fijos
+  const totalGastos=STATE.gastos.reduce((a,g)=>a+(g.monto||0),0);
+  document.getElementById('rep-gastos').innerHTML=STATE.gastos
+    .map(g=>`<div class="rep-row"><span>${g.nombre}</span><span style="color:var(--red)">${fmtPeso(g.monto)}</span></div>`)
+    .join('')+`<div class="rep-row total"><span>TOTAL GASTOS</span><span style="color:var(--red)">${fmtPeso(totalGastos)}</span></div>`;
+
+  // Resultado
+  const neto=totalIngresos-totalGastos;
+  document.getElementById('rep-resultado').innerHTML=`
+    <div class="rep-row"><span>Ingresos Brutos</span><span style="color:var(--green)">${fmtPeso(totalIngresos)}</span></div>
+    <div class="rep-row"><span>Gastos Fijos</span><span style="color:var(--red)">${fmtPeso(totalGastos)}</span></div>
+    <div class="rep-row total"><span>RESULTADO NETO</span><span style="color:${neto>=0?'var(--green)':'var(--red)'}">${fmtPeso(neto)}</span></div>
+  `;
+
+  // Por profesional
+  const porProf={};
+  cobros.forEach(c=>{
+    const k=c.profNombre||'Sin asignar';
+    if(!porProf[k])porProf[k]=0;
+    porProf[k]+=(c.monto||0);
+  });
+  document.getElementById('rep-profs').innerHTML=Object.entries(porProf)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="rep-row"><span>${k}</span><span>${fmtPeso(v)}</span></div>`)
+    .join('')||'<div style="color:var(--text2);padding:10px">Sin datos para este mes</div>';
+}
+
+// ========== CONFIG ==========
+function renderConfig(){
+  const cfg=STATE.config;
+  document.getElementById('cfg-nombre').value=cfg.nombre||'';
+  document.getElementById('cfg-wa').value=cfg.wa||'';
+  document.getElementById('cfg-ig').value=cfg.ig||'';
+  document.getElementById('cfg-dir').value=cfg.dir||'';
+  document.getElementById('cfg-horario').value=cfg.horario||'';
+
+  document.getElementById('profs-config-list').innerHTML=STATE.profs.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-weight:600;font-size:13px;color:${p.color}">${p.nombre}</div><div style="font-size:11px;color:var(--text2)">${p.esp}</div></div>
+      <button class="btn btn-red btn-sm" onclick="delProf('${p.id}')">✕</button>
+    </div>`).join('');
+
+  document.getElementById('servicios-config-list').innerHTML=STATE.servicios.map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div><span style="font-size:13px">${s.nombre}</span><span style="font-size:11px;color:var(--text2);margin-left:8px">${s.cat}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--gold)">${fmtPeso(s.precio)}</span>
+        <button class="btn btn-red btn-sm" onclick="delServicio('${s.id}')">✕</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('gastos-config-list').innerHTML=STATE.gastos.map(g=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span>${g.nombre}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--red)">${fmtPeso(g.monto)}</span>
+        <button class="btn btn-red btn-sm" onclick="delGasto('${g.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function saveConfig(){
+  STATE.config={
+    nombre:document.getElementById('cfg-nombre').value,
+    wa:document.getElementById('cfg-wa').value,
+    ig:document.getElementById('cfg-ig').value,
+    dir:document.getElementById('cfg-dir').value,
+    horario:document.getElementById('cfg-horario').value,
+  };
+  save();toast('Configuración guardada ✓');
+}
+
+function addProf(){
+  const n=document.getElementById('cfg-prof-nombre').value.trim();
+  const e=document.getElementById('cfg-prof-esp').value.trim();
+  const w=document.getElementById('cfg-prof-wa').value.trim();
+  if(!n)return toast('Ingresá el nombre del profesional');
+  const colors=['#c9a96e','#6c9fe0','#9b7fe0','#4caf91','#e09460','#e05c7a','#a09880'];
+  STATE.profs.push({id:uid(),nombre:n,esp:e,wa:w,color:colors[STATE.profs.length%colors.length]});
+  save();renderConfig();
+  document.getElementById('cfg-prof-nombre').value='';
+  document.getElementById('cfg-prof-esp').value='';
+  document.getElementById('cfg-prof-wa').value='';
+}
+function delProf(id){STATE.profs=STATE.profs.filter(p=>p.id!==id);save();renderConfig();}
+
+function addServicio(){
+  const n=document.getElementById('cfg-svc-nombre').value.trim();
+  const p=parseInt(document.getElementById('cfg-svc-precio').value)||0;
+  const c=document.getElementById('cfg-svc-cat').value;
+  if(!n)return toast('Ingresá el nombre del servicio');
+  STATE.servicios.push({id:uid(),nombre:n,precio:p,cat:c});
+  save();renderConfig();
+  document.getElementById('cfg-svc-nombre').value='';
+  document.getElementById('cfg-svc-precio').value='';
+}
+function delServicio(id){STATE.servicios=STATE.servicios.filter(s=>s.id!==id);save();renderConfig();}
+
+function addGasto(){
+  const n=document.getElementById('cfg-gasto-nombre').value.trim();
+  const m=parseInt(document.getElementById('cfg-gasto-monto').value)||0;
+  if(!n)return toast('Ingresá el concepto');
+  STATE.gastos.push({id:uid(),nombre:n,monto:m});
+  save();renderConfig();
+  document.getElementById('cfg-gasto-nombre').value='';
+  document.getElementById('cfg-gasto-monto').value='';
+}
+function delGasto(id){STATE.gastos=STATE.gastos.filter(g=>g.id!==id);save();renderConfig();}
+
+// ========== MODALS ==========
+function openModal(title,html){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+// MODAL TURNO
+function openModalTurno(editId){
+  const t=editId?STATE.turnos.find(x=>x.id===editId):null;
+  const profOptions=STATE.profs.map(p=>`<option value="${p.id}" ${t&&t.profId===p.id?'selected':''}>${p.nombre} — ${p.esp}</option>`).join('');
+  const svcOptions=STATE.servicios.map(s=>`<option value="${s.id}" ${t&&t.svcId===s.id?'selected':''}>${s.nombre} — ${fmtPeso(s.precio)}</option>`).join('');
+  const pacOptions=STATE.pacientes.map(p=>`<option value="${p.id}" ${t&&t.pacienteId===p.id?'selected':''}>${p.nombre}</option>`).join('');
+
+  openModal(editId?'Editar Turno':'Nuevo Turno',`
+    <div class="form-row">
+      <div class="form-group"><label>Fecha</label><input type="date" id="m-fecha" value="${t?t.fecha:today()}"/></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="m-hora" value="${t?t.hora:'15:00'}"/></div>
+    </div>
+    <div class="form-group">
+      <label>Paciente</label>
+      <select id="m-pac-sel"><option value="">— Seleccionar paciente —</option>${pacOptions}</select>
+      <div style="margin-top:6px;display:flex;gap:6px">
+        <input type="text" id="m-pac-nuevo" placeholder="O escribir nombre directo…" value="${t&&!t.pacienteId?t.paciente:''}" style="flex:1"/>
+      </div>
+    </div>
+    <div class="form-group"><label>Servicio</label><select id="m-svc">${svcOptions}</select></div>
+    <div class="form-group"><label>Profesional</label><select id="m-prof">${profOptions}</select></div>
+    <div class="form-group"><label>Estado</label>
+      <select id="m-estado">
+        <option value="pendiente" ${!t||t.estado==='pendiente'?'selected':''}>Pendiente</option>
+        <option value="confirmado" ${t&&t.estado==='confirmado'?'selected':''}>Confirmado</option>
+        <option value="atendido" ${t&&t.estado==='atendido'?'selected':''}>Atendido</option>
+        <option value="cancelado" ${t&&t.estado==='cancelado'?'selected':''}>Cancelado</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Notas</label><textarea id="m-notas" rows="2">${t?t.notas||'':''}</textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      ${editId?`<button class="btn btn-red" onclick="delTurno('${editId}')">Eliminar</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveTurno(${editId?`'${editId}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+function saveTurno(editId){
+  const pacSel=document.getElementById('m-pac-sel').value;
+  const pacNuevo=document.getElementById('m-pac-nuevo').value.trim();
+  const pacId=pacSel||null;
+  const pacNombre=pacId?(STATE.pacientes.find(p=>p.id===pacId)||{nombre:''}).nombre:pacNuevo;
+  if(!pacNombre)return toast('Ingresá el nombre del paciente');
+
+  const data={
+    id:editId||uid(),
+    fecha:document.getElementById('m-fecha').value,
+    hora:document.getElementById('m-hora').value,
+    pacienteId:pacId,
+    paciente:pacNombre,
+    svcId:document.getElementById('m-svc').value,
+    profId:document.getElementById('m-prof').value,
+    estado:document.getElementById('m-estado').value,
+    notas:document.getElementById('m-notas').value,
+  };
+
+  if(editId){const i=STATE.turnos.findIndex(t=>t.id===editId);STATE.turnos[i]=data;}
+  else STATE.turnos.push(data);
+  save();closeModal();toast('Turno guardado ✓');
+  if(currentTab==='inicio')renderInicio();
+  else if(currentTab==='agenda')renderAgenda();
+}
+
+function editTurno(id){openModalTurno(id);}
+function delTurno(id){STATE.turnos=STATE.turnos.filter(t=>t.id!==id);save();closeModal();toast('Turno eliminado');if(currentTab==='inicio')renderInicio();else renderAgenda();}
+function atenderTurno(id){
+  const t=STATE.turnos.find(x=>x.id===id);if(!t)return;
+  t.estado='atendido';save();
+  if(currentTab==='inicio')renderInicio();else renderAgenda();
+  // Prompt cobro
+  setTimeout(()=>openModalCobro(t),300);
+}
+
+// MODAL PACIENTE
+function openModalPaciente(editId){
+  const p=editId?STATE.pacientes.find(x=>x.id===editId):null;
+  const historial=editId?STATE.turnos.filter(t=>t.pacienteId===editId).sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5):[];
+
+  openModal(editId?'Ficha Paciente':'Nuevo Paciente',`
+    <div class="form-row">
+      <div class="form-group"><label>Nombre completo</label><input type="text" id="mp-nombre" value="${p?p.nombre:''}"/></div>
+      <div class="form-group"><label>Teléfono / WhatsApp</label><input type="text" id="mp-tel" value="${p?p.tel||'':''}" placeholder="549264…"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" id="mp-email" value="${p?p.email||':'':''}"/></div>
+      <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="mp-nac" value="${p?p.nac||'':''}" /></div>
+    </div>
+    <div class="form-group"><label>Notas / Antecedentes</label><textarea id="mp-notas" rows="3">${p?p.notas||'':''}</textarea></div>
+    ${historial.length>0?`<div style="margin-top:12px"><div class="card-title">Últimas visitas</div>${historial.map(t=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--text2)">${fmtFecha(t.fecha)} · ${svcById(t.svcId).nombre} · <span class="badge badge-gray">${t.estado}</span></div>`).join('')}</div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      ${editId?`<button class="btn btn-red" onclick="delPaciente('${editId}')">Eliminar</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-gold" onclick="savePaciente(${editId?`'${editId}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+function savePaciente(editId){
+  const n=document.getElementById('mp-nombre').value.trim();
+  if(!n)return toast('Ingresá el nombre');
+  const data={id:editId||uid(),nombre:n,tel:document.getElementById('mp-tel').value.trim(),email:document.getElementById('mp-email').value.trim(),nac:document.getElementById('mp-nac').value,notas:document.getElementById('mp-notas').value.trim()};
+  if(editId){const i=STATE.pacientes.findIndex(p=>p.id===editId);STATE.pacientes[i]=data;}
+  else STATE.pacientes.push(data);
+  save();closeModal();toast('Paciente guardado ✓');
+  if(currentTab==='pacientes')renderPacientes();
+}
+function delPaciente(id){STATE.pacientes=STATE.pacientes.filter(p=>p.id!==id);save();closeModal();renderPacientes();}
+
+// MODAL COBRO
+function openModalCobro(turnoData){
+  const t=turnoData||null;
+  const svc=t?svcById(t.svcId):{nombre:'',precio:0};
+  const prof=t?profById(t.profId):{nombre:''};
+  const pacOptions=STATE.pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  const svcOptions=STATE.servicios.map(s=>`<option value="${s.id}" ${t&&t.svcId===s.id?'selected':''}>${s.nombre} — ${fmtPeso(s.precio)}</option>`).join('');
+
+  openModal('Registrar Cobro',`
+    <div class="form-group">
+      <label>Paciente</label>
+      <select id="mc-pac"><option value="">— libre —</option>${pacOptions}</select>
+      <input type="text" id="mc-pac-txt" placeholder="O nombre libre" style="margin-top:6px" value="${t?t.paciente:''}"/>
+    </div>
+    <div class="form-group"><label>Servicio</label><select id="mc-svc" onchange="autoMonto()">${svcOptions}</select></div>
+    <div class="form-group"><label>Profesional</label><input type="text" id="mc-prof" value="${prof.nombre}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Monto Cobrado ($)</label><input type="number" id="mc-monto" value="${svc.precio||''}" placeholder="0"/></div>
+      <div class="form-group"><label>Total del Servicio ($)</label><input type="number" id="mc-total" value="${svc.precio||''}" placeholder="0"/></div>
+    </div>
+    <div class="form-group"><label>Forma de Pago</label>
+      <select id="mc-metodo" onchange="toggleNX()">
+        <option value="efectivo">Efectivo</option>
+        <option value="transferencia">Transferencia</option>
+        <option value="tarjeta">Tarjeta de Débito/Crédito</option>
+        <option value="naranjax">Naranja X</option>
+        <option value="cuotas">Plan de Cuotas</option>
+      </select>
+    </div>
+    <div id="nx-section" style="display:none">
+      <div class="form-group"><label>Link Naranja X (pegar luego de generar)</label><input type="text" id="mc-nxlink" placeholder="https://naranjax.com/…"/></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">💡 Generá el link en la app Naranja X → "Cobrar" → copiá y pegá aquí</div>
+    </div>
+    <div class="form-group"><label>Estado del Pago</label>
+      <select id="mc-estado">
+        <option value="pagado">Pagado completo</option>
+        <option value="parcial">Pago parcial</option>
+        <option value="deuda">Queda en deuda</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Fecha</label><input type="date" id="mc-fecha" value="${today()}"/></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveCobro()">Registrar Cobro</button>
+    </div>
+  `);
+  if(t&&t.pacienteId){
+    const sel=document.getElementById('mc-pac');
+    if(sel)sel.value=t.pacienteId;
+  }
+}
+
+function toggleNX(){
+  const m=document.getElementById('mc-metodo')?.value;
+  const nx=document.getElementById('nx-section');
+  if(nx)nx.style.display=m==='naranjax'?'block':'none';
+}
+function autoMonto(){
+  const sel=document.getElementById('mc-svc');if(!sel)return;
+  const svc=svcById(sel.value);
+  const m=document.getElementById('mc-monto');const tot=document.getElementById('mc-total');
+  if(m&&!m.value)m.value=svc.precio;
+  if(tot)tot.value=svc.precio;
+}
+
+function saveCobro(){
+  const monto=parseInt(document.getElementById('mc-monto')?.value)||0;
+  const total=parseInt(document.getElementById('mc-total')?.value)||monto;
+  const pacSel=document.getElementById('mc-pac')?.value;
+  const pacTxt=document.getElementById('mc-pac-txt')?.value.trim();
+  const pac=pacSel?(STATE.pacientes.find(p=>p.id===pacSel)||{nombre:pacTxt}).nombre:pacTxt;
+  const svcEl=document.getElementById('mc-svc');
+  const svcNombre=svcEl?svcById(svcEl.value).nombre:'';
+  const profNombre=document.getElementById('mc-prof')?.value||'';
+  const metodo=document.getElementById('mc-metodo')?.value||'efectivo';
+  const estado=document.getElementById('mc-estado')?.value||'pagado';
+  const nxLink=document.getElementById('mc-nxlink')?.value||'';
+  const fecha=document.getElementById('mc-fecha')?.value||today();
+
+  STATE.cobros.push({
+    id:uid(),paciente:pac,pacienteId:pacSel||null,
+    servicio:svcNombre,profNombre,monto,total,saldo:total-monto,
+    metodo,estado,nxLink,fecha
+  });
+  save();closeModal();toast('Cobro registrado ✓');
+  if(currentTab==='caja')renderCaja();else if(currentTab==='inicio')renderInicio();
+}
+
+function saldarDeuda(id){
+  const c=STATE.cobros.find(x=>x.id===id);if(!c)return;
+  c.estado='pagado';c.monto=c.total;c.saldo=0;c.fechaSaldo=today();
+  save();renderCaja();toast('Deuda saldada ✓');
+}
+
+// MODAL STOCK
+function openModalStock(editId){
+  const s=editId?STATE.stock.find(x=>x.id===editId):null;
+  openModal(editId?'Editar Item':'Nuevo Item de Stock',`
+    <div class="form-group"><label>Nombre</label><input type="text" id="ms-nombre" value="${s?s.nombre:''}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Categoría</label>
+        <select id="ms-cat">
+          <option value="tratamiento" ${!s||s.cat==='tratamiento'?'selected':''}>Tratamientos</option>
+          <option value="limpieza" ${s&&s.cat==='limpieza'?'selected':''}>Limpieza</option>
+          <option value="venta" ${s&&s.cat==='venta'?'selected':''}>Venta a Clientes</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Unidad</label><input type="text" id="ms-unidad" value="${s?s.unidad:'u'}" placeholder="u, kg, lt…"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Stock Actual</label><input type="number" id="ms-stock" value="${s?s.stock:0}"/></div>
+      <div class="form-group"><label>Stock Mínimo (alerta)</label><input type="number" id="ms-minimo" value="${s?s.minimo:2}"/></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      ${editId?`<button class="btn btn-red" onclick="delStock('${editId}')">Eliminar</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveStock(${editId?`'${editId}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+function saveStock(editId){
+  const n=document.getElementById('ms-nombre').value.trim();if(!n)return toast('Ingresá el nombre');
+  const data={id:editId||uid(),nombre:n,cat:document.getElementById('ms-cat').value,unidad:document.getElementById('ms-unidad').value,stock:parseInt(document.getElementById('ms-stock').value)||0,minimo:parseInt(document.getElementById('ms-minimo').value)||1};
+  if(editId){const i=STATE.stock.findIndex(s=>s.id===editId);STATE.stock[i]=data;}else STATE.stock.push(data);
+  save();closeModal();renderStock();toast('Item guardado ✓');
+}
+function delStock(id){STATE.stock=STATE.stock.filter(s=>s.id!==id);save();closeModal();renderStock();}
+function editStock(id){openModalStock(id);}
+
+// ========== WHATSAPP ==========
+function waTurno(id){
+  const t=STATE.turnos.find(x=>x.id===id);if(!t)return;
+  const svc=svcById(t.svcId);
+  const pac=STATE.pacientes.find(p=>p.id===t.pacienteId);
+  if(!pac||!pac.tel)return toast('El paciente no tiene teléfono registrado');
+  const msg=encodeURIComponent(`Hola ${pac.nombre.split(' ')[0]} 👋\n\nTe recordamos tu turno en *ONE DEPIL*:\n📅 ${fmtFecha(t.fecha)} a las ${t.hora}hs\n💆 ${svc.nombre}\nPase de Compras · Ayres Village Open Mall\n\n¿Podés confirmar tu asistencia? ✨`);
+  window.open(`https://wa.me/${pac.tel.replace(/\D/g,'')}?text=${msg}`,'_blank');
+}
+
+function waContactar(pacId){
+  const pac=STATE.pacientes.find(p=>p.id===pacId);if(!pac||!pac.tel)return;
+  const msg=encodeURIComponent(`Hola ${pac.nombre.split(' ')[0]}! Te escribe ONE DEPIL 💆✨`);
+  window.open(`https://wa.me/${pac.tel.replace(/\D/g,'')}?text=${msg}`,'_blank');
+}
+
+// ========== EXPORTAR / IMPORTAR ==========
+function exportarDatos(){
+  const data=JSON.stringify(STATE,null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json,'+encodeURIComponent(data);
+  a.download='onedepil-backup-'+today()+'.json';
+  a.click();
+  toast('Datos exportados ✓');
+}
+function importarDatos(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.profs)STATE.profs=d.profs;
+      if(d.servicios)STATE.servicios=d.servicios;
+      if(d.gastos)STATE.gastos=d.gastos;
+      if(d.turnos)STATE.turnos=d.turnos;
+      if(d.pacientes)STATE.pacientes=d.pacientes;
+      if(d.cobros)STATE.cobros=d.cobros;
+      if(d.stock)STATE.stock=d.stock;
+      if(d.config)STATE.config=d.config;
+      save();renderTab(currentTab);toast('Datos importados ✓');
+    }catch(err){toast('Error al importar: '+err.message)}
+  };
+  r.readAsText(file);
+}
+function resetDatos(){
+  STATE={profs:DEFAULT_PROFS,servicios:DEFAULT_SERVICIOS,gastos:DEFAULT_GASTOS,turnos:[],pacientes:[],cobros:[],stock:DEFAULT_STOCK,config:STATE.config};
+  save();renderTab(currentTab);toast('Datos reseteados');
+}
+
+// ========== INIT ==========
+window.onerror=function(msg,src,line){console.error('[OD Error]',msg,src,line);return true};
+window.onunhandledrejection=function(e){console.error('[OD Promise]',e.reason)};
+
+document.addEventListener('DOMContentLoaded',()=>{
+  try{renderInicio()}catch(e){console.error(e)}
+});
+</script>
+</body>
+</html>
