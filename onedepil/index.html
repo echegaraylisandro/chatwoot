@@ -4,6 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ONE DEPIL — Panel de Gestión</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#1a1a30"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ONE DEPIL"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -169,6 +174,7 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
   <button class="nav-btn" onclick="goTab('caja')">💰 Caja</button>
   <button class="nav-btn" onclick="goTab('stock')">📦 Stock</button>
   <button class="nav-btn" onclick="goTab('reportes')">📊 Reportes</button>
+  <button class="nav-btn" onclick="goTab('herramientas')">🛠️ Herramientas</button>
   <button class="nav-btn" onclick="goTab('config')">⚙️ Config</button>
 </div>
 
@@ -305,6 +311,85 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
   </div>
 </div>
 
+<!-- ===== HERRAMIENTAS ===== -->
+<div id="tab-herramientas" class="tab-panel">
+  <h2 style="margin-bottom:16px">🛠️ Herramientas</h2>
+  <div class="grid2">
+
+    <!-- WHATSAPP RECORDATORIOS -->
+    <div class="card">
+      <div class="card-title">📲 Recordatorios WhatsApp</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Enviá recordatorios a todos los turnos de mañana en un click.</p>
+      <button class="btn btn-wa" onclick="enviarRecordatorios()" style="width:100%;justify-content:center;margin-bottom:12px">Enviar recordatorios de mañana</button>
+      <div class="card-title" style="margin-top:8px">Plantillas de mensaje</div>
+      <div id="wa-templates-list"></div>
+      <hr class="divider"/>
+      <div class="form-group"><label>Nueva plantilla</label><textarea id="wa-tpl-txt" rows="3" placeholder="Hola {nombre}, te recordamos tu turno el {fecha} a las {hora}hs para {servicio}. ¿Confirmás? ONE DEPIL 💆"></textarea></div>
+      <div class="form-group"><label>Nombre de la plantilla</label><input type="text" id="wa-tpl-nombre" placeholder="Recordatorio estándar"/></div>
+      <button class="btn btn-gold btn-sm" onclick="addWaTpl()">+ Guardar plantilla</button>
+      <div style="font-size:11px;color:var(--text2);margin-top:8px">Variables disponibles: {nombre} {fecha} {hora} {servicio} {profesional}</div>
+    </div>
+
+    <!-- NARANJA X -->
+    <div class="card">
+      <div class="card-title" style="color:var(--orange)">🟠 Cobrar con Naranja X</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Generá el link de cobro paso a paso.</p>
+      <div class="form-group"><label>Paciente</label><input type="text" id="nx-pac" placeholder="Nombre del paciente"/></div>
+      <div class="form-group"><label>Servicio</label>
+        <select id="nx-svc" onchange="nx_autoMonto()">
+          <option value="">— seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Monto ($)</label><input type="number" id="nx-monto" placeholder="0"/></div>
+      <div class="form-group"><label>Cuotas</label>
+        <select id="nx-cuotas">
+          <option value="1">Pago único</option>
+          <option value="3">3 cuotas</option>
+          <option value="6">6 cuotas</option>
+          <option value="12">12 cuotas</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;border-color:var(--orange);color:var(--orange);margin-bottom:8px" onclick="abrirNaranjaX()">
+        1 · Abrir Naranja X → "Cobrar"
+      </button>
+      <div class="form-group"><label>2 · Pegá el link generado por Naranja X</label><input type="text" id="nx-link-input" placeholder="https://naranjax.com/…"/></div>
+      <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="registrarCobroNX()">3 · Registrar cobro en caja</button>
+      <div id="nx-wa-btn" style="display:none;margin-top:8px">
+        <button class="btn btn-wa" style="width:100%;justify-content:center" onclick="enviarLinkNX()">4 · Enviar link por WhatsApp al paciente</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- KOIBOX EXPORT -->
+  <div class="card">
+    <div class="card-title">🔄 Exportar / Importar Koibox</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Exportá pacientes y turnos en formato CSV compatible con Koibox para importar/sincronizar.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="exportKoiboxPacientes()">⬇️ Exportar Pacientes (CSV)</button>
+      <button class="btn btn-ghost" onclick="exportKoiboxTurnos()">⬇️ Exportar Turnos (CSV)</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('koibox-import').click()">⬆️ Importar CSV Koibox</button>
+      <input type="file" id="koibox-import" accept=".csv" style="display:none" onchange="importKoibox(event)"/>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text2)">
+      💡 Koibox permite importar clientes desde CSV. Usá "Importar Pacientes" en tu cuenta Koibox y subí el archivo generado aquí.
+    </div>
+  </div>
+
+  <!-- MULTI-SUCURSAL -->
+  <div class="card">
+    <div class="card-title">🏢 Sucursales</div>
+    <div id="sucursales-list" style="margin-bottom:12px"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Nombre de sucursal</label><input type="text" id="suc-nombre" placeholder="Ayres Village — Principal"/></div>
+      <div class="form-group"><label>Dirección</label><input type="text" id="suc-dir" placeholder="Pase de Compras…"/></div>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="addSucursal()">+ Agregar Sucursal</button>
+    <div style="font-size:11px;color:var(--text2);margin-top:8px">Al agregar una sucursal podés filtrar turnos y caja por sede.</div>
+  </div>
+
+</div>
+
 <!-- ===== CONFIG ===== -->
 <div id="tab-config" class="tab-panel">
   <h2 style="margin-bottom:16px">⚙️ Configuración</h2>
@@ -406,29 +491,42 @@ const DEFAULT_PROFS = [
   {id:'p7',nombre:'Técnica Depilación',esp:'Depilación Definitiva',wa:'',color:'#a09880'},
 ];
 
+// Precios actualizados Jun-2026 · referencia: Clínica Babick SJ + mercado provincial
 const DEFAULT_SERVICIOS = [
-  {id:'s1',nombre:'Depilación Definitiva',precio:65000,cat:'depilacion'},
-  {id:'s2',nombre:'Botox',precio:260000,cat:'medico'},
-  {id:'s3',nombre:'Endolift Facial',precio:180000,cat:'estetica'},
-  {id:'s4',nombre:'Endolift Corporal',precio:200000,cat:'corporal'},
-  {id:'s5',nombre:'Endimed Facial Intensive',precio:160000,cat:'estetica'},
-  {id:'s6',nombre:'Endimed Facial FSR',precio:35000,cat:'estetica'},
-  {id:'s7',nombre:'Endimed Facial Continuo',precio:30000,cat:'estetica'},
-  {id:'s8',nombre:'Endimed Corporal',precio:45000,cat:'corporal'},
-  {id:'s9',nombre:'Mesoterapia Facial',precio:45000,cat:'estetica'},
-  {id:'s10',nombre:'Mesoterapia Corporal',precio:45000,cat:'corporal'},
-  {id:'s11',nombre:'Mesoterapia Capilar',precio:35000,cat:'capilar'},
-  {id:'s12',nombre:'Plasma Rico en Plaquetas',precio:55000,cat:'medico'},
-  {id:'s13',nombre:'Alquimia',precio:40000,cat:'estetica'},
-  {id:'s14',nombre:'Limpieza Facial',precio:35000,cat:'estetica'},
-  {id:'s15',nombre:'CM Slim',precio:35000,cat:'corporal'},
-  {id:'s16',nombre:'Encurve',precio:40000,cat:'corporal'},
-  {id:'s17',nombre:'Suero Terapia',precio:60000,cat:'suero'},
-  {id:'s18',nombre:'Masaje Terapéutico',precio:35000,cat:'wellness'},
-  {id:'s19',nombre:'Masaje Modelador',precio:40000,cat:'wellness'},
-  {id:'s20',nombre:'Consulta Ginecológica',precio:50000,cat:'gine'},
-  {id:'s21',nombre:'Consulta Endocrinológica',precio:60000,cat:'endo'},
-  {id:'s22',nombre:'Terapia Descenso de Peso',precio:80000,cat:'endo'},
+  // Depilación — equipo Monolith Mediostar (premium), +30% sobre centros básicos
+  {id:'s1',nombre:'Depilación Definitiva — Zona Pequeña',precio:28000,cat:'depilacion'},
+  {id:'s1b',nombre:'Depilación Definitiva — Zona Mediana',precio:55000,cat:'depilacion'},
+  {id:'s1c',nombre:'Depilación Definitiva — Zona Grande',precio:90000,cat:'depilacion'},
+  {id:'s1d',nombre:'Depilación Definitiva — Cuerpo Completo',precio:220000,cat:'depilacion'},
+  // Médico / Inyectable — mercado SJ botox $390k-$500k, ONE DEPIL posicionamiento medio-alto
+  {id:'s2',nombre:'Botox (por zona)',precio:420000,cat:'medico'},
+  {id:'s12',nombre:'Plasma Rico en Plaquetas (PRP)',precio:180000,cat:'medico'}, // mercado ~$160 USD
+  // Endolift Velas — tecnología premium, precio acorde equipamiento
+  {id:'s3',nombre:'Endolift Facial',precio:320000,cat:'estetica'},
+  {id:'s4',nombre:'Endolift Corporal',precio:380000,cat:'corporal'},
+  // Endimed
+  {id:'s5',nombre:'Endimed Facial Intensive',precio:180000,cat:'estetica'},
+  {id:'s6',nombre:'Endimed Facial FSR',precio:60000,cat:'estetica'},
+  {id:'s7',nombre:'Endimed Facial Continuo',precio:55000,cat:'estetica'},
+  {id:'s8',nombre:'Endimed Corporal',precio:65000,cat:'corporal'},
+  // Mesoterapia — mercado SJ ~$65k facial
+  {id:'s9',nombre:'Mesoterapia Facial',precio:65000,cat:'estetica'},
+  {id:'s10',nombre:'Mesoterapia Corporal',precio:65000,cat:'corporal'},
+  {id:'s11',nombre:'Mesoterapia Capilar',precio:55000,cat:'capilar'},
+  // Faciales — referencia Andrea Lemos SJ: limpieza $65.800
+  {id:'s13',nombre:'Alquimia',precio:55000,cat:'estetica'},
+  {id:'s14',nombre:'Limpieza Facial Profunda',precio:65000,cat:'estetica'},
+  // Corporal
+  {id:'s15',nombre:'CM Slim',precio:65000,cat:'corporal'},
+  {id:'s16',nombre:'Encurve',precio:65000,cat:'corporal'},
+  // Suero / Wellness
+  {id:'s17',nombre:'Suero Terapia',precio:85000,cat:'suero'},
+  {id:'s18',nombre:'Masaje Terapéutico',precio:50000,cat:'wellness'},
+  {id:'s19',nombre:'Masaje Modelador Corporal',precio:65000,cat:'wellness'},
+  // Médico — consultas
+  {id:'s20',nombre:'Consulta Ginecológica',precio:90000,cat:'gine'},
+  {id:'s21',nombre:'Consulta Endocrinológica',precio:95000,cat:'endo'},
+  {id:'s22',nombre:'Terapia Descenso de Peso (sesión)',precio:130000,cat:'endo'},
 ];
 
 const DEFAULT_GASTOS = [
@@ -518,6 +616,7 @@ function renderTab(t){
   else if(t==='caja')renderCaja();
   else if(t==='stock')renderStock();
   else if(t==='reportes')renderReportes();
+  else if(t==='herramientas')renderHerramientas();
   else if(t==='config')renderConfig();
 }
 
@@ -1174,9 +1273,211 @@ function resetDatos(){
   save();renderTab(currentTab);toast('Datos reseteados');
 }
 
+// ========== HERRAMIENTAS — STATE ==========
+STATE.waTpls = STATE.waTpls || ls('od_watpls', [
+  {id:'wt1',nombre:'Recordatorio estándar',txt:'Hola {nombre} 👋 Te recordamos tu turno mañana en *ONE DEPIL*:\n📅 {fecha} a las {hora}hs\n💆 {servicio} con {profesional}\n📍 Ayres Village Open Mall\n\n¿Confirmás asistencia? ✨'},
+  {id:'wt2',nombre:'Confirmación inmediata',txt:'Hola {nombre}! Tu turno en ONE DEPIL quedó confirmado ✅\n📅 {fecha} · {hora}hs\n💆 {servicio}\n\nAntes de venir: llegá 5 min antes y sin maquillaje en la zona. Gracias! 🌸'},
+  {id:'wt3',nombre:'Cancelación',txt:'Hola {nombre}, lamentablemente debemos reagendar tu turno del {fecha} a las {hora}hs. Te contactamos a la brevedad para coordinar una nueva fecha. Disculpá los inconvenientes! 🙏 — ONE DEPIL'},
+]);
+STATE.sucursales = STATE.sucursales || ls('od_sucursales', [
+  {id:'su1',nombre:'Ayres Village — Principal',dir:'Pase de Compras, Ayres Village Open Mall, San Juan'},
+]);
+STATE.nxPendiente = null;
+
+function saveAll(){save();lsSet('od_watpls',STATE.waTpls);lsSet('od_sucursales',STATE.sucursales);}
+
+// ========== HERRAMIENTAS RENDER ==========
+function renderHerramientas(){
+  // WA Templates
+  document.getElementById('wa-templates-list').innerHTML = STATE.waTpls.map(t=>`
+    <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:13px">${t.nombre}</span>
+        <button class="btn btn-red btn-sm" onclick="delWaTpl('${t.id}')">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--text2);white-space:pre-wrap">${t.txt.slice(0,120)}…</div>
+    </div>`).join('');
+
+  // NX service options
+  const sel=document.getElementById('nx-svc');
+  if(sel){sel.innerHTML='<option value="">— seleccionar —</option>'+STATE.servicios.map(s=>`<option value="${s.id}">${s.nombre} — ${fmtPeso(s.precio)}</option>`).join('');}
+
+  // Sucursales
+  document.getElementById('sucursales-list').innerHTML = STATE.sucursales.map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-weight:600">${s.nombre}</div><div style="font-size:11px;color:var(--text2)">${s.dir}</div></div>
+      <button class="btn btn-red btn-sm" onclick="delSucursal('${s.id}')">✕</button>
+    </div>`).join('');
+}
+
+// ========== WHATSAPP TEMPLATES ==========
+function addWaTpl(){
+  const txt=document.getElementById('wa-tpl-txt').value.trim();
+  const nombre=document.getElementById('wa-tpl-nombre').value.trim();
+  if(!txt||!nombre)return toast('Completá nombre y texto');
+  STATE.waTpls.push({id:uid(),nombre,txt});
+  saveAll();renderHerramientas();
+  document.getElementById('wa-tpl-txt').value='';
+  document.getElementById('wa-tpl-nombre').value='';
+}
+function delWaTpl(id){STATE.waTpls=STATE.waTpls.filter(t=>t.id!==id);saveAll();renderHerramientas();}
+
+function applyTpl(tpl,turno){
+  const pac=STATE.pacientes.find(p=>p.id===turno.pacienteId)||{nombre:turno.paciente};
+  const svc=svcById(turno.svcId);
+  const prof=profById(turno.profId);
+  return tpl.txt
+    .replace(/{nombre}/g,pac.nombre.split(' ')[0])
+    .replace(/{fecha}/g,fmtFecha(turno.fecha))
+    .replace(/{hora}/g,turno.hora)
+    .replace(/{servicio}/g,svc.nombre)
+    .replace(/{profesional}/g,prof.nombre);
+}
+
+function enviarRecordatorios(){
+  const mañana=new Date();mañana.setDate(mañana.getDate()+1);
+  const fechaMañana=mañana.toISOString().slice(0,10);
+  const turnos=STATE.turnos.filter(t=>t.fecha===fechaMañana&&t.estado!=='cancelado');
+  if(!turnos.length)return toast('Sin turnos para mañana');
+  const tpl=STATE.waTpls[0];
+  if(!tpl)return toast('Configurá al menos una plantilla');
+  let enviados=0;
+  turnos.forEach(t=>{
+    const pac=STATE.pacientes.find(p=>p.id===t.pacienteId);
+    if(!pac||!pac.tel)return;
+    const msg=encodeURIComponent(applyTpl(tpl,t));
+    window.open(`https://wa.me/${pac.tel.replace(/\D/g,'')}?text=${msg}`,'_blank');
+    enviados++;
+  });
+  toast(`${enviados} recordatorio${enviados!==1?'s':''} enviado${enviados!==1?'s':''} ✓`);
+}
+
+// ========== NARANJA X ==========
+function nx_autoMonto(){
+  const sel=document.getElementById('nx-svc');if(!sel)return;
+  const svc=svcById(sel.value);
+  const m=document.getElementById('nx-monto');
+  if(m)m.value=svc.precio||'';
+}
+
+function abrirNaranjaX(){
+  const monto=document.getElementById('nx-monto')?.value;
+  const pac=document.getElementById('nx-pac')?.value||'Paciente';
+  if(!monto||monto==='0')return toast('Ingresá el monto primero');
+  toast(`Abriendo Naranja X — cobrá $${Number(monto).toLocaleString('es-AR')} a ${pac}`);
+  window.open('https://naranjax.com','_blank');
+}
+
+function registrarCobroNX(){
+  const pac=document.getElementById('nx-pac')?.value.trim()||'';
+  const monto=parseInt(document.getElementById('nx-monto')?.value)||0;
+  const svcId=document.getElementById('nx-svc')?.value;
+  const cuotas=document.getElementById('nx-cuotas')?.value;
+  const link=document.getElementById('nx-link-input')?.value.trim()||'';
+  if(!pac||!monto)return toast('Completá paciente y monto');
+  const svc=svcById(svcId);
+  STATE.cobros.push({
+    id:uid(),paciente:pac,pacienteId:null,servicio:svc.nombre,profNombre:'',
+    monto,total:monto,saldo:0,metodo:'naranjax',estado:'pagado',
+    nxLink:link,nxCuotas:cuotas,fecha:today()
+  });
+  STATE.nxPendiente={pac,link,monto,svc:svc.nombre};
+  saveAll();
+  document.getElementById('nx-wa-btn').style.display='block';
+  toast('Cobro NX registrado ✓');
+}
+
+function enviarLinkNX(){
+  if(!STATE.nxPendiente)return;
+  const {pac,link,monto,svc}=STATE.nxPendiente;
+  // Buscar tel del paciente por nombre
+  const pacObj=STATE.pacientes.find(p=>p.nombre.toLowerCase().includes(pac.toLowerCase()));
+  if(!pacObj||!pacObj.tel)return toast('No encontré teléfono para '+pac+'. Buscalo en Pacientes.');
+  const msg=encodeURIComponent(`Hola ${pac.split(' ')[0]}! 💆\n\nTe enviamos el link de pago para *${svc}* — *${fmtPeso(monto)}*\n\n${link}\n\nGracias por elegir ONE DEPIL ✨`);
+  window.open(`https://wa.me/${pacObj.tel.replace(/\D/g,'')}?text=${msg}`,'_blank');
+}
+
+// ========== KOIBOX EXPORT ==========
+function csvEscape(v){if(v==null)return'';const s=String(v);return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;}
+function downloadCSV(filename,rows){
+  const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=filename;a.click();
+}
+
+function exportKoiboxPacientes(){
+  const header=['Nombre','Apellido','Teléfono','Email','Fecha Nacimiento','Notas'];
+  const rows=STATE.pacientes.map(p=>{
+    const parts=p.nombre.trim().split(' ');
+    return[parts[0],parts.slice(1).join(' ')||'',p.tel||'',p.email||'',p.nac||'',p.notas||''];
+  });
+  downloadCSV('koibox_pacientes_'+today()+'.csv',[header,...rows]);
+  toast('CSV de pacientes exportado ✓');
+}
+
+function exportKoiboxTurnos(){
+  const header=['Fecha','Hora','Paciente','Servicio','Profesional','Estado','Notas'];
+  const rows=STATE.turnos.map(t=>[
+    t.fecha,t.hora,t.paciente,svcById(t.svcId).nombre,profById(t.profId).nombre,t.estado,t.notas||''
+  ]);
+  downloadCSV('koibox_turnos_'+today()+'.csv',[header,...rows]);
+  toast('CSV de turnos exportado ✓');
+}
+
+function importKoibox(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const lines=ev.target.result.split('\n').filter(Boolean);
+    if(lines.length<2)return toast('CSV vacío o inválido');
+    const headers=lines[0].split(',').map(h=>h.trim().toLowerCase());
+    let imported=0;
+    lines.slice(1).forEach(line=>{
+      const cols=line.split(',');
+      const get=k=>{const i=headers.indexOf(k);return i>=0?(cols[i]||'').trim().replace(/^"|"$/g,''):''};
+      const nombre=(get('nombre')+' '+get('apellido')).trim()||get('cliente')||get('name')||'';
+      if(!nombre)return;
+      if(STATE.pacientes.find(p=>p.nombre.toLowerCase()===nombre.toLowerCase()))return;
+      STATE.pacientes.push({id:uid(),nombre,tel:get('teléfono')||get('telefono')||get('tel')||'',email:get('email')||'',nac:'',notas:''});
+      imported++;
+    });
+    saveAll();toast(`${imported} paciente${imported!==1?'s':''} importado${imported!==1?'s':''} ✓`);
+  };
+  r.readAsText(file);
+}
+
+// ========== MULTI-SUCURSAL ==========
+function addSucursal(){
+  const n=document.getElementById('suc-nombre').value.trim();
+  const d=document.getElementById('suc-dir').value.trim();
+  if(!n)return toast('Ingresá el nombre');
+  STATE.sucursales.push({id:uid(),nombre:n,dir:d});
+  saveAll();renderHerramientas();
+  document.getElementById('suc-nombre').value='';
+  document.getElementById('suc-dir').value='';
+}
+function delSucursal(id){
+  if(STATE.sucursales.length<=1)return toast('Debe quedar al menos una sucursal');
+  STATE.sucursales=STATE.sucursales.filter(s=>s.id!==id);
+  saveAll();renderHerramientas();
+}
+
 // ========== INIT ==========
 window.onerror=function(msg,src,line){console.error('[OD Error]',msg,src,line);return true};
 window.onunhandledrejection=function(e){console.error('[OD Promise]',e.reason)};
+
+// PWA Service Worker
+if('serviceWorker' in navigator){
+  const swCode=`
+    const CACHE='onedepil-v2';
+    const FILES=['/onedepil/index.html','/onedepil/manifest.json'];
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+    self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+  `;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
 
 document.addEventListener('DOMContentLoaded',()=>{
   try{renderInicio()}catch(e){console.error(e)}
