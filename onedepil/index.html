@@ -761,7 +761,7 @@ async function doLogin() {
   document.getElementById('login-user-display').textContent = user.nombre + ' (' + user.rol + ')';
   document.getElementById('btn-logout').style.display = '';
   aplicarRol();
-  init();
+  await init();
 }
 
 function doLogout() {
@@ -787,7 +787,7 @@ function aplicarRol() {
   if (activeTab && !permitidas.includes(activeTab)) goTab('inicio');
 }
 
-function checkSession() {
+async function checkSession() {
   try {
     const s = sessionStorage.getItem('od_session');
     if (s) {
@@ -796,6 +796,7 @@ function checkSession() {
       document.getElementById('login-user-display').textContent = SESSION.nombre + ' (' + SESSION.rol + ')';
       document.getElementById('btn-logout').style.display = '';
       aplicarRol();
+      await init();
       return true;
     }
   } catch {}
@@ -2449,13 +2450,46 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
 
-function init() {
+async function autoImportKoibox() {
+  // Si no hay datos locales, importar automáticamente los datos embebidos
+  let importado = false;
+  if (STATE.pacientes.length === 0 && typeof KOIBOX_DATA_B64 !== 'undefined' && KOIBOX_DATA_B64) {
+    try {
+      const bin = atob(KOIBOX_DATA_B64);
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      writer.write(bytes); writer.close();
+      const out = await new Response(ds.readable).text();
+      STATE.pacientes = JSON.parse(out);
+      save();
+      importado = true;
+    } catch(e) { console.error('Auto-import pacientes:', e); }
+  }
+  if (STATE.turnos.length === 0 && typeof KOIBOX_TURNOS_B64 !== 'undefined' && KOIBOX_TURNOS_B64) {
+    try {
+      const bin = atob(KOIBOX_TURNOS_B64);
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      writer.write(bytes); writer.close();
+      const out = await new Response(ds.readable).text();
+      STATE.turnos = JSON.parse(out);
+      save();
+      importado = true;
+    } catch(e) { console.error('Auto-import turnos:', e); }
+  }
+  return importado;
+}
+
+async function init() {
+  await autoImportKoibox();
   try{renderInicio()}catch(e){console.error(e)}
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
-  if (!checkSession()) {
-    // Mostrar login — no iniciar la app
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const ok = await checkSession();
+  if (!ok) {
     document.getElementById('login-pass').addEventListener('keydown', e => {
       if (e.key === 'Enter') doLogin();
     });
