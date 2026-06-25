@@ -47,102 +47,63 @@ function matchesAny(msg, words) {
   return words.some(w => n.includes(normalize(w)));
 }
 
+// ─── LOG DE CONSULTAS (para reporte cada 30 min) ──────────────────────────────
+const consultasLog = []; // { ts, nombre, tel, mensaje }
+function logConsulta(nombre, tel, mensaje) {
+  consultasLog.push({ ts: new Date().toISOString(), nombre, tel, mensaje });
+}
+
 // ─── RESPUESTAS ───────────────────────────────────────────────────────────────
-const MENU_PRINCIPAL = `🌸 *Hola! Soy el asistente de ${cfg.CLINICA.nombre}*
-
-¿En qué te puedo ayudar?
-
-1️⃣ Ver servicios y precios
-2️⃣ Horarios y ubicación
-3️⃣ Sacar / consultar turno
-4️⃣ Confirmar un turno
-5️⃣ Cancelar un turno
-
-Respondé con el número o escribí tu consulta 😊`;
-
 const RESP = {
-  saludo: (nombre) =>
-    `¡Hola${nombre ? ' ' + nombre : ''}! 👋✨\n\nBienvenida/o a *${cfg.CLINICA.nombre}*\n${cfg.CLINICA.profesional}\n\n${MENU_PRINCIPAL}`,
+  saludo: (nombre) => nombre
+    ? `Hola ${nombre}! 😊 Soy Aldana, de *ONE DEPIL*. ¿En qué te puedo ayudar?`
+    : `Hola! 😊 Soy Aldana, de *ONE DEPIL*. ¿En qué te puedo ayudar?`,
 
   horario: () =>
-    `⏰ *Horarios de atención:*\n${cfg.CLINICA.horario}\n\n📍 *Dónde estamos:*\n${cfg.CLINICA.direccion}\n\n📲 Este número: wa.me/${cfg.CLINICA.wa}\n📸 Instagram: ${cfg.CLINICA.instagram}`,
+    `Atendemos *lunes a viernes de 15 a 21hs* y *sábados de 9 a 15hs* 🗓️\n\nEstamos en *${cfg.CLINICA.direccion}*.\n\n¿Querés que te agendemos un turno? 😊`,
 
   ubicacion: () =>
-    `📍 *Cómo llegar:*\nEstamos en el *${cfg.CLINICA.direccion}*\n\nGoogle Maps: https://maps.app.goo.gl/AyresVillageSanJuan\n\n⏰ ${cfg.CLINICA.horario}`,
+    `Estamos en el *Pase de Compras de Ayres Village Open Mall*, acá en San Juan 📍\n\nGoogle Maps: https://maps.app.goo.gl/AyresVillageSanJuan\n\n⏰ Atendemos lunes a viernes de 15 a 21hs, sábados de 9 a 15hs.\n\n¿Te agendo un turno? 😊`,
 
   servicios: () =>
-    `💆 *Nuestros tratamientos:*
+    `En *ONE DEPIL* hacemos un montón de cosas! 💆‍♀️✨
 
-✨ *Depilación Definitiva* — Monolith Mediostar (última tecnología)
-💉 *Botox & Rellenos*
-⚡ *Endolift Facial y Corporal* — Velas
-🔬 *Endimed* (Facial / Corporal / Intensivo)
-💊 *Mesoterapia* Facial · Corporal · Capilar
-🩸 *Plasma Rico en Plaquetas (PRP)*
-🌊 *CM Slim* — Remodelado corporal
-🔄 *Encurve*
-💧 *Suero Terapias* (Dr. Walter Antuña)
-🌿 *Masajes* Terapéuticos y Modeladores
-🩺 *Ginecología* — Dr. Andrés Echegaray
-⚖️ *Endocrinología / Descenso de Peso* — Dra. Otiñano
+🪒 *Depilación definitiva* — tecnología Monolith Mediostar
+💉 *Botox, rellenos y Baby Botox*
+⚡ *Endolift* facial y corporal
+🔬 *Endymed* (facial e intensif)
+🌊 *HIFU* facial y corporal
+❄️ *Criolipolisis* y *Ultracavitación*
+💊 *Mesoterapia* y *PRP*
+✨ *Limpiezas faciales*
+💧 *Suero terapias*
+⚖️ *Descenso de peso* — Dra. Otiñano
+🩺 *Ginecología* — Dr. Echegaray
 
-Para ver precios respondé *2* o escribí *precios* 😊`,
+¿Te interesa alguno en particular? Te cuento más 😊`,
 
   precios: () =>
-    `💰 *Precios (actualizado Jun 2026):*
+    `Los valores varían según el tratamiento y la zona a tratar 😊
 
-🪒 *Depilación Definitiva (Monolith Mediostar):*
-  • Axilas: ${fmtPeso(22000)} lista / ${fmtPeso(19000)} contado
-  • Bikini: ${fmtPeso(22000)} / ${fmtPeso(19000)}
-  • Bozo: ${fmtPeso(10000)} / ${fmtPeso(8000)}
-  • Cara completa: ${fmtPeso(30000)} / ${fmtPeso(26000)}
-  • Pierna completa: ${fmtPeso(26500)} / ${fmtPeso(23000)}
-  • Cuerpo completo (mujer): ${fmtPeso(160000)} / ${fmtPeso(140000)}
+Para *depilación* tenemos precios por zona que van desde muy accesibles, y también armamos combos con descuento.
 
-💉 *Médico-Estéticos:*
-  • Botox (1 zona): ${fmtPeso(311000)} / ${fmtPeso(290000)}
-  • Baby Botox: ${fmtPeso(277000)} / ${fmtPeso(258000)}
-  • PRP facial: ${fmtPeso(70000)} / ${fmtPeso(65000)}
-  • Relleno labial: ${fmtPeso(255000)} / ${fmtPeso(237000)}
-  • Endolift Facial: ${fmtPeso(480000)} / ${fmtPeso(445000)}
-  • Endolift Corporal: ${fmtPeso(550000)} / ${fmtPeso(510000)}
-  • HIFU Facial: ${fmtPeso(350000)} / ${fmtPeso(325000)}
-  • Criolipolisis: ${fmtPeso(250000)} / ${fmtPeso(232000)}
+Para tratamientos como *Botox, Endolift, HIFU o Endymed* los valores los maneja directamente la Dra. Sabrina según la evaluación de cada paciente.
 
-✨ *Estética Facial:*
-  • Limpieza facial simple: ${fmtPeso(25000)} / ${fmtPeso(20000)}
-  • Limpieza facial profunda: ${fmtPeso(32000)} / ${fmtPeso(26000)}
-  • Endymed Facial (sesión): ${fmtPeso(180000)} / ${fmtPeso(165000)}
-  • Mesoterapia facial: ${fmtPeso(90000)} / ${fmtPeso(80000)}
+Lo mejor es que te agendemos una consulta sin cargo para que te asesoren bien y te den el precio exacto para tu caso 🌸
 
-💧 *Sueros & Terapias:*
-  • Suero terapia: ${fmtPeso(55000)} / ${fmtPeso(50000)}
+¿Qué día y horario te quedaría bien para venir?`,
 
-📦 *Packs con descuento disponibles!*
-Precio lista = tarjeta · Precio contado = efectivo/transferencia
-
-Para turnos → escribí *turno* o respondé *3* 😊`,
-
-  turno: () =>
-    `📅 *Sacar turno en ${cfg.CLINICA.nombre}*
-
-Para reservar tu turno necesitamos:
-• Tu nombre completo
-• El tratamiento que buscás
-• Día y horario preferido
-
-📞 Respondé este mensaje con esa información y te confirmamos a la brevedad ✨
-
-⏰ Atendemos: ${cfg.CLINICA.horario}`,
+  turno: (nombre) =>
+    `Genial${nombre ? ', ' + nombre : ''}! 😊 Para agendarte necesito:\n\n• Tu nombre completo\n• El tratamiento que querés\n• Qué día y horario te viene bien\n\n¡Respondé con esa info y te confirmo enseguida! ✨`,
 
   confirmarSinTurno: () =>
-    `✅ Gracias por confirmar!\n\nSi necesitás más información o querés cambiar el horario, escribinos. ¡Te esperamos! 🌸`,
+    `Perfecto, anotado! 🙌 Si llegás a necesitar cambiar algo avisame, estamos acá 😊`,
 
   cancelarSinTurno: () =>
-    `Entendemos, no hay problema 🙏\n\nCuando quieras reagendar, estamos disponibles:\n⏰ ${cfg.CLINICA.horario}\n\n¡Hasta pronto! 😊`,
+    `No hay problema, tranquila/o 🙏 Cuando quieras reagendar mandame un mensaje y te ubico enseguida.\n\n¡Hasta la próxima! 😊`,
 
-  noEntiendo: () =>
-    `Lo siento, no entendí bien tu consulta 😊\n\n${MENU_PRINCIPAL}`,
+  noEntiendo: (nombre) =>
+    `${nombre ? 'Hola ' + nombre + '! ' : 'Hola! '}Soy Aldana de *ONE DEPIL* 😊\n\n¿En qué te puedo ayudar? Podés preguntarme por turnos, tratamientos, horarios o cómo llegar 🌸`,
 };
 
 // ─── RECORDATORIO ─────────────────────────────────────────────────────────────
@@ -222,16 +183,21 @@ async function handleMessage(sock, msg) {
   );
   const nombre    = paciente?.nombre?.split(' ')[0] || '';
 
-  // ── FLUJO: solicitud de turno en progreso ──────────────────────────────────
   const conv = getConv(jid);
+
+  // Loguear toda consulta entrante (para reporte 30 min)
+  logConsulta(paciente?.nombre || '+' + num, num, body);
+
+  // ── FLUJO: solicitud de turno en progreso ──────────────────────────────────
   if (conv?.step === 'esperando_turno_datos') {
-    // Guardar solicitud y notificar admin
     await sock.sendMessage(jid, {
-      text: `✅ Recibimos tu solicitud!\n\n📋 *Resumen:*\n${body}\n\nTe confirmamos el turno a la brevedad. ¡Gracias! 😊`,
+      text: `Perfecto${nombre ? ', ' + nombre : ''}! 🙌 Ya le paso tu solicitud a la secretaría para que te confirmen el turno a la brevedad.\n\nSi necesitás algo más avisame 😊`,
     });
-    await sock.sendMessage(cfg.ADMIN_WA, {
-      text: `📅 *Nueva solicitud de turno*\n\nDe: ${paciente?.nombre || num}\nTel: +${num}\n\n${body}`,
-    });
+    for (const miembro of cfg.EQUIPO) {
+      await sock.sendMessage(miembro.wa, {
+        text: `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n\n"${body}"\n\n⚡ Confirmar a la brevedad`,
+      }).catch(() => {});
+    }
     clearConv(jid);
     return;
   }
@@ -245,11 +211,13 @@ async function handleMessage(sock, msg) {
     if (turnosPendientes.length > 0) {
       const t = turnosPendientes[0];
       await sock.sendMessage(jid, {
-        text: `✅ *Turno confirmado!*\n📅 ${fmtFecha(t.fecha)} a las ${t.hora}hs\n💆 ${t.servicio || ''}\n\n¡Te esperamos! 🌸`,
+        text: `Buenísimo${nombre ? ', ' + nombre : ''}! 🙌 Tu turno queda confirmado para el *${fmtFecha(t.fecha)} a las ${t.hora}hs*.\n\n¡Te esperamos! 🌸`,
       });
-      await sock.sendMessage(cfg.ADMIN_WA, {
-        text: `✅ Turno CONFIRMADO\n👤 ${paciente?.nombre || num}\n📅 ${fmtFecha(t.fecha)} ${t.hora}hs — ${t.servicio || ''}`,
-      });
+      for (const miembro of cfg.EQUIPO) {
+        await sock.sendMessage(miembro.wa, {
+          text: `✅ *Turno confirmado*\n👤 ${paciente?.nombre || num}\n📅 ${fmtFecha(t.fecha)} ${t.hora}hs — ${t.servicio || ''}`,
+        }).catch(() => {});
+      }
     } else {
       await sock.sendMessage(jid, { text: RESP.confirmarSinTurno() });
     }
@@ -259,22 +227,11 @@ async function handleMessage(sock, msg) {
   // ── CANCELACIÓN ──────────────────────────────────────────────────────────
   if (matchesAny(body, cfg.KEYWORDS.cancelar)) {
     await sock.sendMessage(jid, { text: RESP.cancelarSinTurno() });
-    await sock.sendMessage(cfg.ADMIN_WA, {
-      text: `⚠️ Cancelación/ausencia\n👤 ${paciente?.nombre || '+'+num}\nMensaje: "${body}"`,
-    });
-    return;
-  }
-
-  // ── MENÚ NUMÉRICO ────────────────────────────────────────────────────────
-  if (/^[1-5]$/.test(n)) {
-    const respMap = {
-      '1': RESP.servicios(),
-      '2': RESP.precios(),
-      '3': (() => { setConv(jid, 'esperando_turno_datos'); return RESP.turno(); })(),
-      '4': RESP.confirmarSinTurno(),
-      '5': RESP.cancelarSinTurno(),
-    };
-    await sock.sendMessage(jid, { text: respMap[n] });
+    for (const miembro of cfg.EQUIPO) {
+      await sock.sendMessage(miembro.wa, {
+        text: `⚠️ *Cancelación*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\nMensaje: "${body}"`,
+      }).catch(() => {});
+    }
     return;
   }
 
@@ -301,14 +258,13 @@ async function handleMessage(sock, msg) {
   }
   if (matchesAny(body, cfg.KEYWORDS.turno)) {
     setConv(jid, 'esperando_turno_datos');
-    await sock.sendMessage(jid, { text: RESP.turno() });
+    await sock.sendMessage(jid, { text: RESP.turno(nombre) });
     return;
   }
 
   // ── FALLBACK ─────────────────────────────────────────────────────────────
-  // Solo responder si es el primer mensaje (no spamear)
   if (!conv) {
-    await sock.sendMessage(jid, { text: RESP.noEntiendo() });
+    await sock.sendMessage(jid, { text: RESP.noEntiendo(nombre) });
   }
 }
 
@@ -340,19 +296,45 @@ function iniciarCrons(sock) {
     }
   }, { timezone: 'America/Argentina/San_Juan' });
 
-  // Briefing diario para el admin
+  // Briefing diario para el equipo
   cron.schedule(cfg.CRON_BRIEFING, async () => {
     const data = loadData();
-    try {
-      await sock.sendMessage(cfg.ADMIN_WA, { text: generarBriefing(data) });
-      console.log('[CRON] Briefing enviado al admin');
-    } catch (e) {
-      console.error('[CRON] Error briefing:', e.message);
+    const txt = generarBriefing(data);
+    for (const miembro of cfg.EQUIPO) {
+      try {
+        await sock.sendMessage(miembro.wa, { text: txt });
+      } catch (e) {
+        console.error('[CRON] Error briefing a ' + miembro.nombre + ':', e.message);
+      }
     }
+    console.log('[CRON] Briefing enviado al equipo');
+  }, { timezone: 'America/Argentina/San_Juan' });
+
+  // Reporte de consultas cada 30 min — lunes a sábado de 10 a 21hs
+  cron.schedule(cfg.CRON_REPORTE, async () => {
+    if (consultasLog.length === 0) return; // sin novedad, no molestamos
+    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/San_Juan' });
+    let txt = `📋 *ONE DEPIL — Resumen ${hora}hs*\n\n`;
+    txt += `*${consultasLog.length} consulta(s) en los últimos 30 min:*\n\n`;
+    consultasLog.forEach((c, i) => {
+      const h = new Date(c.ts).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/San_Juan' });
+      txt += `${i + 1}. *${c.nombre}* (+${c.tel}) — ${h}hs\n   _"${c.mensaje.slice(0, 80)}"_\n\n`;
+    });
+    txt += `_Para responder directamente, escribile al número correspondiente._`;
+    consultasLog.length = 0; // limpiar log
+    for (const miembro of cfg.EQUIPO) {
+      try {
+        await sock.sendMessage(miembro.wa, { text: txt });
+      } catch (e) {
+        console.error('[CRON] Error reporte a ' + miembro.nombre + ':', e.message);
+      }
+    }
+    console.log('[CRON] Reporte de consultas enviado al equipo');
   }, { timezone: 'America/Argentina/San_Juan' });
 
   console.log('[CRON] Recordatorios:', cfg.CRON_RECORDATORIOS);
   console.log('[CRON] Briefing:', cfg.CRON_BRIEFING);
+  console.log('[CRON] Reporte consultas:', cfg.CRON_REPORTE);
 }
 
 // ─── CONEXIÓN ─────────────────────────────────────────────────────────────────

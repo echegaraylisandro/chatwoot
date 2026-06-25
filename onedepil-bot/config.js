@@ -8,28 +8,35 @@ module.exports = {
     wa: '5492646725551',
   },
 
-  // Número del admin que recibe notificaciones del bot (mismo número de la clínica)
+  // Admin principal (Sabrina / clínica)
   ADMIN_WA: '5492646725551@s.whatsapp.net',
 
-  // Archivo donde el dashboard exporta los datos (copialo al lado del bot)
+  // Equipo que recibe reportes cada 30 minutos
+  EQUIPO: [
+    { nombre: 'Aldana', wa: '5492645635397@s.whatsapp.net' },
+    { nombre: 'Gerardo', wa: '5493825414533@s.whatsapp.net' },
+  ],
+
+  // Archivo donde el dashboard exporta los datos
   DATA_FILE: './data.json',
 
-  // Horario de envío automático de recordatorios (cron syntax)
-  // Default: todos los días a las 10:00am
+  // Recordatorios de turno: todos los días a las 10am
   CRON_RECORDATORIOS: '0 10 * * *',
 
-  // Horario del briefing matutino para el admin
-  CRON_BRIEFING: '0 8 * * 1-6',
+  // Briefing matutino para el equipo: lunes a sábado a las 9am
+  CRON_BRIEFING: '0 9 * * 1-6',
 
-  // Palabras clave que activan respuesta automática
+  // Reporte de consultas cada 30 min de 10 a 21hs, lunes a sábado
+  CRON_REPORTE: '*/30 10-21 * * 1-6',
+
   KEYWORDS: {
-    turno:    ['turno','turnos','sacar turno','quiero turno','reservar','agenda','agendar'],
-    precios:  ['precio','precios','cuánto','cuanto','costo','costos','valores','tarifa'],
-    horario:  ['horario','horarios','atienden','abren','cierran','cuando atienden'],
-    ubicacion:['donde','dónde','dirección','ubicación','como llegar','ayres'],
-    servicios:['servicios','tratamientos','que hacen','que ofrecen','depilacion','botox','laser','endolift'],
-    confirmar:['confirmo','confirmar','si confirmo','voy','ahi voy','ahi estoy'],
-    cancelar: ['cancelo','cancelar','no puedo','no voy','no puedo ir'],
-    saludo:   ['hola','buenas','buenos dias','buenas tardes','buenas noches','hi','hello'],
+    turno:    ['turno','turnos','sacar turno','quiero turno','reservar','agenda','agendar','saco','quiero sacar'],
+    precios:  ['precio','precios','cuánto','cuanto','costo','costos','valores','tarifa','sale','cuanto sale','cuanto cuesta','cuesta'],
+    horario:  ['horario','horarios','atienden','abren','cierran','cuando atienden','que dias'],
+    ubicacion:['donde','dónde','dirección','ubicación','como llegar','ayres','direccion','quedan','estan'],
+    servicios:['servicios','tratamientos','que hacen','que ofrecen','depilacion','botox','laser','endolift','tienen','ofrecen','realizan'],
+    confirmar:['confirmo','confirmar','si confirmo','voy','ahi voy','ahi estoy','confirme','ahi estare'],
+    cancelar: ['cancelo','cancelar','no puedo','no voy','no puedo ir','no voy a poder'],
+    saludo:   ['hola','buenas','buenos dias','buenas tardes','buenas noches','hi','hello','buen dia','como estan'],
   },
 };
