@@ -176,6 +176,7 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
   <button class="nav-btn" onclick="goTab('reportes')">📊 Reportes</button>
   <button class="nav-btn" onclick="goTab('agente')">🤖 Agente</button>
   <button class="nav-btn" onclick="goTab('paquetes')">🎁 Paquetes</button>
+  <button class="nav-btn" onclick="goTab('presupuesto')">📄 Presupuesto</button>
   <button class="nav-btn" onclick="goTab('herramientas')">🛠️ Herramientas</button>
   <button class="nav-btn" onclick="goTab('config')">⚙️ Config</button>
 </div>
@@ -435,6 +436,89 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
     <div id="paquetes-vendidos-list"></div>
   </div>
 </div>
+
+<!-- ===== PRESUPUESTO ===== -->
+<div id="tab-presupuesto" class="tab-panel">
+  <div class="sec-header">
+    <h2>📄 Presupuestador</h2>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="limpiarPresupuesto()">🗑️ Limpiar</button>
+      <button class="btn btn-gold" onclick="imprimirPresupuesto()">🖨️ Imprimir / PDF</button>
+      <button class="btn btn-wa" onclick="enviarPresupuestoWA()">Enviar por WA</button>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-title">Datos del presupuesto</div>
+        <div class="form-group"><label>Paciente</label>
+          <select id="pres-pac" onchange="presAutofill()">
+            <option value="">— libre o seleccionar —</option>
+          </select>
+          <input type="text" id="pres-pac-txt" placeholder="O escribir nombre" style="margin-top:6px"/>
+        </div>
+        <div class="form-group"><label>Validez</label>
+          <select id="pres-validez">
+            <option value="7 días">7 días</option>
+            <option value="15 días" selected>15 días</option>
+            <option value="30 días">30 días</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Notas adicionales</label>
+          <textarea id="pres-notas" rows="2" placeholder="Condiciones, observaciones…"></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Agregar servicio</div>
+        <div class="form-row">
+          <div class="form-group"><label>Servicio</label>
+            <select id="pres-svc-sel" onchange="presAddSvcAuto()">
+              <option value="">— seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Cantidad</label>
+            <input type="number" id="pres-cant" value="1" min="1"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Precio unit. ($)</label>
+            <input type="number" id="pres-precio-unit" placeholder="0"/>
+          </div>
+          <div class="form-group"><label>Descuento (%)</label>
+            <input type="number" id="pres-desc" value="0" min="0" max="100"/>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="presAgregarItem()" style="width:100%;justify-content:center">+ Agregar al presupuesto</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="pres-preview-card">
+        <div id="pres-preview"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT STYLES -->
+<style>
+@media print{
+  #header,#nav,#app>*:not(#pres-print-area){display:none!important}
+  #pres-print-area{display:block!important;position:fixed;inset:0;padding:0}
+  body{background:#fff!important;color:#000!important}
+}
+.pres-doc{background:#fff;color:#1a1a30;padding:32px;border-radius:10px;font-family:'Segoe UI',sans-serif}
+.pres-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:2px solid #c9a96e;padding-bottom:16px}
+.pres-brand{font-size:22px;font-weight:700;color:#1a1a30}
+.pres-sub{font-size:12px;color:#666;margin-top:4px}
+.pres-meta{text-align:right;font-size:12px;color:#666}
+.pres-titulo{font-size:16px;font-weight:700;color:#1a1a30;margin:16px 0 8px}
+.pres-table{width:100%;border-collapse:collapse;margin-top:8px}
+.pres-table th{background:#1a1a30;color:#c9a96e;padding:8px 10px;text-align:left;font-size:12px}
+.pres-table td{padding:9px 10px;border-bottom:1px solid #eee;font-size:13px}
+.pres-total-row{font-weight:700;color:#1a1a30;font-size:15px}
+.pres-footer{margin-top:20px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:12px}
+</style>
+<div id="pres-print-area" style="display:none"></div>
 
 <!-- ===== HERRAMIENTAS ===== -->
 <div id="tab-herramientas" class="tab-panel">
@@ -743,6 +827,7 @@ function renderTab(t){
   else if(t==='reportes')renderReportes();
   else if(t==='agente')renderAgente();
   else if(t==='paquetes')renderPaquetes();
+  else if(t==='presupuesto')renderPresupuesto();
   else if(t==='herramientas')renderHerramientas();
   else if(t==='config')renderConfig();
 }
@@ -1202,7 +1287,35 @@ function openModalPaciente(editId){
       <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="mp-nac" value="${p?p.nac||'':''}" /></div>
     </div>
     <div class="form-group"><label>Notas / Antecedentes</label><textarea id="mp-notas" rows="3">${p?p.notas||'':''}</textarea></div>
-    ${historial.length>0?`<div style="margin-top:12px"><div class="card-title">Últimas visitas</div>${historial.map(t=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--text2)">${fmtFecha(t.fecha)} · ${svcById(t.svcId).nombre} · <span class="badge badge-gray">${t.estado}</span></div>`).join('')}</div>`:''}
+    <hr class="divider"/>
+    <div class="card-title" style="margin-bottom:8px">🏥 Ficha Clínica</div>
+    <div class="form-row">
+      <div class="form-group"><label>Alergias conocidas</label><input type="text" id="mp-alergias" value="${p?p.alergias||'':''" placeholder="Ninguna / penicilina…"/></div>
+      <div class="form-group"><label>Contraindicaciones</label><input type="text" id="mp-contra" value="${p?p.contra||'':''" placeholder="Marcapasos / embarazo…"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Medicación habitual</label><input type="text" id="mp-medicacion" value="${p?p.medicacion||'':''" placeholder="Ninguna…"/></div>
+      <div class="form-group"><label>Zona de piel</label>
+        <select id="mp-piel">
+          <option value="">— </option>
+          <option value="I" ${p&&p.piel==='I'?'selected':''}>Tipo I — muy clara, siempre quema</option>
+          <option value="II" ${p&&p.piel==='II'?'selected':''}>Tipo II — clara, quema fácil</option>
+          <option value="III" ${p&&p.piel==='III'?'selected':''}>Tipo III — intermedia</option>
+          <option value="IV" ${p&&p.piel==='IV'?'selected':''}>Tipo IV — morena clara</option>
+          <option value="V" ${p&&p.piel==='V'?'selected':''}>Tipo V — morena oscura</option>
+          <option value="VI" ${p&&p.piel==='VI'?'selected':''}>Tipo VI — muy oscura</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Antecedentes / Observaciones clínicas</label><textarea id="mp-antecedentes" rows="2">${p?p.antecedentes||'':''}</textarea></div>
+    ${editId?`
+    <hr class="divider"/>
+    <div class="card-title" style="margin-bottom:8px">📸 Fotos de evolución</div>
+    <div id="mp-fotos-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${(p&&p.fotos||[]).map((f,i)=>`<div style="position:relative"><img src="${f.data}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"/><div style="font-size:10px;color:var(--text2);text-align:center">${f.fecha}</div><button onclick="deleteFoto('${editId}',${i})" style="position:absolute;top:2px;right:2px;background:#3d1a25;border:none;color:var(--red);border-radius:4px;padding:1px 4px;cursor:pointer;font-size:10px">✕</button></div>`).join('')}</div>
+    <input type="file" id="mp-foto-file" accept="image/*" style="display:none" onchange="agregarFoto('${editId}',event)"/>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mp-foto-file').click()">+ Agregar foto</button>
+    `:''}
+    ${historial.length>0?`<hr class="divider"/><div class="card-title">Últimas visitas</div>${historial.map(t=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--text2)">${fmtFecha(t.fecha)} · ${svcById(t.svcId).nombre} · <span class="badge badge-gray">${t.estado}</span></div>`).join('')}`:''}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
       ${editId?`<button class="btn btn-red" onclick="delPaciente('${editId}')">Eliminar</button>`:''}
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -1214,13 +1327,61 @@ function openModalPaciente(editId){
 function savePaciente(editId){
   const n=document.getElementById('mp-nombre').value.trim();
   if(!n)return toast('Ingresá el nombre');
-  const data={id:editId||uid(),nombre:n,tel:document.getElementById('mp-tel').value.trim(),email:document.getElementById('mp-email').value.trim(),nac:document.getElementById('mp-nac').value,notas:document.getElementById('mp-notas').value.trim()};
+  const existing = editId ? (STATE.pacientes.find(p=>p.id===editId)||{}) : {};
+  const data={
+    id:editId||uid(),
+    nombre:n,
+    tel:document.getElementById('mp-tel').value.trim(),
+    email:document.getElementById('mp-email').value.trim(),
+    nac:document.getElementById('mp-nac').value,
+    notas:document.getElementById('mp-notas').value.trim(),
+    alergias:document.getElementById('mp-alergias')?.value.trim()||'',
+    contra:document.getElementById('mp-contra')?.value.trim()||'',
+    medicacion:document.getElementById('mp-medicacion')?.value.trim()||'',
+    piel:document.getElementById('mp-piel')?.value||'',
+    antecedentes:document.getElementById('mp-antecedentes')?.value.trim()||'',
+    fotos:existing.fotos||[],
+  };
   if(editId){const i=STATE.pacientes.findIndex(p=>p.id===editId);STATE.pacientes[i]=data;}
   else STATE.pacientes.push(data);
   save();closeModal();toast('Paciente guardado ✓');
   if(currentTab==='pacientes')renderPacientes();
 }
 function delPaciente(id){STATE.pacientes=STATE.pacientes.filter(p=>p.id!==id);save();closeModal();renderPacientes();}
+
+function agregarFoto(pacId, event){
+  const file=event.target.files[0]; if(!file) return;
+  if(file.size>2*1024*1024) return toast('Foto muy grande. Máximo 2MB.');
+  const r=new FileReader();
+  r.onload=ev=>{
+    const pac=STATE.pacientes.find(p=>p.id===pacId); if(!pac) return;
+    if(!pac.fotos) pac.fotos=[];
+    pac.fotos.push({data:ev.target.result, fecha:today()});
+    save();
+    // Refresh foto list in modal
+    const lista=document.getElementById('mp-fotos-list');
+    if(lista) lista.innerHTML=pac.fotos.map((f,i)=>`
+      <div style="position:relative">
+        <img src="${f.data}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"/>
+        <div style="font-size:10px;color:var(--text2);text-align:center">${f.fecha}</div>
+        <button onclick="deleteFoto('${pacId}',${i})" style="position:absolute;top:2px;right:2px;background:#3d1a25;border:none;color:var(--red);border-radius:4px;padding:1px 4px;cursor:pointer;font-size:10px">✕</button>
+      </div>`).join('');
+    toast('Foto guardada ✓');
+  };
+  r.readAsDataURL(file);
+}
+
+function deleteFoto(pacId, idx){
+  const pac=STATE.pacientes.find(p=>p.id===pacId); if(!pac||!pac.fotos) return;
+  pac.fotos.splice(idx,1); save();
+  const lista=document.getElementById('mp-fotos-list');
+  if(lista) lista.innerHTML=pac.fotos.map((f,i)=>`
+    <div style="position:relative">
+      <img src="${f.data}" style="width:80px;height:80px;object-fit:cover;border-radius:6px"/>
+      <button onclick="deleteFoto('${pacId}',${i})" style="position:absolute;top:2px;right:2px;background:#3d1a25;border:none;color:var(--red);border-radius:4px;padding:1px 4px;cursor:pointer;font-size:10px">✕</button>
+    </div>`).join('');
+  toast('Foto eliminada');
+}
 
 // MODAL COBRO
 function openModalCobro(turnoData){
@@ -1692,6 +1853,128 @@ function savePaquete(){
 }
 function delPaquete(id){STATE.paquetes=STATE.paquetes.filter(p=>p.id!==id);saveAll();renderPaquetes();}
 function togglePaquete(id){const p=STATE.paquetes.find(x=>x.id===id);if(p){p.activo=!p.activo;saveAll();renderPaquetes();}}
+
+// ========== PRESUPUESTADOR ==========
+let presItems = [];
+
+function renderPresupuesto(){
+  const pacSel = document.getElementById('pres-pac');
+  if(pacSel) pacSel.innerHTML = '<option value="">— libre o seleccionar —</option>' +
+    STATE.pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  const svcSel = document.getElementById('pres-svc-sel');
+  if(svcSel) svcSel.innerHTML = '<option value="">— seleccionar —</option>' +
+    STATE.servicios.map(s=>`<option value="${s.id}">${s.nombre} — ${fmtPeso(s.precio)}</option>`).join('');
+  actualizarPreviewPres();
+}
+
+function presAutofill(){
+  const id = document.getElementById('pres-pac')?.value;
+  if(!id) return;
+  const p = STATE.pacientes.find(x=>x.id===id);
+  if(p){ const el=document.getElementById('pres-pac-txt'); if(el) el.value=p.nombre; }
+}
+
+function presAddSvcAuto(){
+  const id = document.getElementById('pres-svc-sel')?.value;
+  if(!id) return;
+  const s = svcById(id);
+  const pu = document.getElementById('pres-precio-unit');
+  if(pu) pu.value = s.precio||0;
+}
+
+function presAgregarItem(){
+  const svcId = document.getElementById('pres-svc-sel')?.value;
+  const cant = parseInt(document.getElementById('pres-cant')?.value)||1;
+  const precioUnit = parseInt(document.getElementById('pres-precio-unit')?.value)||0;
+  const desc = parseInt(document.getElementById('pres-desc')?.value)||0;
+  const svc = svcById(svcId);
+  if(!svcId || !precioUnit) return toast('Seleccioná servicio y precio');
+  const precioFinal = Math.round(precioUnit * (1 - desc/100));
+  presItems.push({ id:uid(), nombre:svc.nombre, cant, precioUnit, desc, precioFinal, total:precioFinal*cant });
+  actualizarPreviewPres();
+  document.getElementById('pres-cant').value='1';
+  document.getElementById('pres-desc').value='0';
+  document.getElementById('pres-precio-unit').value='';
+  document.getElementById('pres-svc-sel').value='';
+}
+
+function limpiarPresupuesto(){ presItems=[]; actualizarPreviewPres(); toast('Presupuesto limpiado'); }
+
+function actualizarPreviewPres(){
+  const pacTxt = document.getElementById('pres-pac-txt')?.value ||
+    (()=>{ const id=document.getElementById('pres-pac')?.value; return id?(STATE.pacientes.find(p=>p.id===id)||{nombre:''}).nombre:''; })() || 'Paciente';
+  const validez = document.getElementById('pres-validez')?.value || '15 días';
+  const notas = document.getElementById('pres-notas')?.value || '';
+  const total = presItems.reduce((a,i)=>a+i.total,0);
+  const num = 'PRES-'+Date.now().toString().slice(-6);
+  const fechaStr = new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+
+  const html = `<div class="pres-doc">
+    <div class="pres-header">
+      <div>
+        <div class="pres-brand">✦ ONE DEPIL</div>
+        <div class="pres-sub">Medicina & Estética — Dra. Sabrina Quiroga<br>Pase de Compras, Ayres Village Open Mall, San Juan<br>WhatsApp: +54 9 264 672-5551 · @onedepil_oficial</div>
+      </div>
+      <div class="pres-meta">
+        <div style="font-weight:700;font-size:14px;color:#1a1a30">PRESUPUESTO</div>
+        <div>N° ${num}</div>
+        <div>${fechaStr}</div>
+        <div>Válido: ${validez}</div>
+      </div>
+    </div>
+    <div class="pres-titulo">Para: ${pacTxt}</div>
+    ${presItems.length===0
+      ? '<div style="color:#999;padding:20px;text-align:center">Agregá servicios usando el formulario</div>'
+      : `<table class="pres-table">
+          <tr><th>Servicio</th><th>Cant.</th><th>Precio Unit.</th><th>Dto.</th><th>Total</th></tr>
+          ${presItems.map((it,i)=>`<tr>
+            <td>${it.nombre} <button onclick="presQuitarItem(${i})" style="background:none;border:none;cursor:pointer;color:#e05c7a;font-size:11px;margin-left:4px">✕</button></td>
+            <td>${it.cant}</td>
+            <td>${fmtPeso(it.precioUnit)}</td>
+            <td>${it.desc>0?it.desc+'%':'—'}</td>
+            <td style="font-weight:600">${fmtPeso(it.total)}</td>
+          </tr>`).join('')}
+          <tr class="pres-total-row">
+            <td colspan="4" style="text-align:right;padding-top:12px">TOTAL</td>
+            <td style="padding-top:12px;color:#c9a96e">${fmtPeso(total)}</td>
+          </tr>
+        </table>`}
+    ${notas?`<div style="margin-top:16px;font-size:12px;color:#555;background:#f9f6f1;padding:10px;border-radius:6px">${notas}</div>`:''}
+    <div class="pres-footer">
+      Los precios son en pesos argentinos e incluyen el tratamiento completo por sesión.<br>
+      Consultas y turnos: wa.me/5492646725551 · instagram.com/onedepil_oficial<br>
+      Ayres Village Open Mall · San Juan
+    </div>
+  </div>`;
+
+  const prev = document.getElementById('pres-preview');
+  if(prev) prev.innerHTML = html;
+}
+
+function presQuitarItem(i){ presItems.splice(i,1); actualizarPreviewPres(); }
+
+function imprimirPresupuesto(){
+  const prev = document.getElementById('pres-preview');
+  if(!prev?.innerHTML) return toast('Generá el presupuesto primero');
+  const area = document.getElementById('pres-print-area');
+  area.innerHTML = prev.innerHTML;
+  area.style.display = 'block';
+  window.print();
+  setTimeout(()=>{ area.style.display='none'; }, 500);
+}
+
+function enviarPresupuestoWA(){
+  const pacTxt = document.getElementById('pres-pac-txt')?.value || 'paciente';
+  const pac = STATE.pacientes.find(p=>p.nombre.toLowerCase().includes(pacTxt.toLowerCase()));
+  const total = presItems.reduce((a,i)=>a+i.total,0);
+  const validez = document.getElementById('pres-validez')?.value||'15 días';
+  let msg = `Hola ${pacTxt.split(' ')[0]} 👋\n\nTe enviamos tu presupuesto de *ONE DEPIL*:\n\n`;
+  presItems.forEach(it=>{ msg+=`• ${it.nombre} x${it.cant}${it.desc>0?' ('+it.desc+'% dto.)':''} → ${fmtPeso(it.total)}\n`; });
+  msg+=`\n💰 *TOTAL: ${fmtPeso(total)}*\nVálido por: ${validez}\n\n`;
+  msg+=`Turnos y consultas: wa.me/5492646725551\n📍 Ayres Village Open Mall ✨`;
+  const num = pac?.tel ? pac.tel.replace(/\D/g,'') : STATE.config?.wa||'';
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+}
 
 // ========== HERRAMIENTAS — STATE ==========
 STATE.waTpls = STATE.waTpls || ls('od_watpls', [
