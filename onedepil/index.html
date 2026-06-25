@@ -700,42 +700,102 @@ const DEFAULT_PROFS = [
   {id:'p7',nombre:'Técnica Depilación',esp:'Depilación Definitiva',wa:'',color:'#a09880'},
 ];
 
-// Precios actualizados Jun-2026 · referencia: Clínica Babick SJ + mercado provincial
+// Precios reales ONE DEPIL — Lista oficial Jun-2026
+// precioC = contado/transferencia · precio = lista (tarjeta/general)
 const DEFAULT_SERVICIOS = [
-  // Depilación — equipo Monolith Mediostar (premium), +30% sobre centros básicos
-  {id:'s1',nombre:'Depilación Definitiva — Zona Pequeña',precio:28000,cat:'depilacion'},
-  {id:'s1b',nombre:'Depilación Definitiva — Zona Mediana',precio:55000,cat:'depilacion'},
-  {id:'s1c',nombre:'Depilación Definitiva — Zona Grande',precio:90000,cat:'depilacion'},
-  {id:'s1d',nombre:'Depilación Definitiva — Cuerpo Completo',precio:220000,cat:'depilacion'},
-  // Médico / Inyectable — mercado SJ botox $390k-$500k, ONE DEPIL posicionamiento medio-alto
-  {id:'s2',nombre:'Botox (por zona)',precio:420000,cat:'medico'},
-  {id:'s12',nombre:'Plasma Rico en Plaquetas (PRP)',precio:180000,cat:'medico'}, // mercado ~$160 USD
-  // Endolift Velas — tecnología premium, precio acorde equipamiento
-  {id:'s3',nombre:'Endolift Facial',precio:320000,cat:'estetica'},
-  {id:'s4',nombre:'Endolift Corporal',precio:380000,cat:'corporal'},
-  // Endimed
-  {id:'s5',nombre:'Endimed Facial Intensive',precio:180000,cat:'estetica'},
-  {id:'s6',nombre:'Endimed Facial FSR',precio:60000,cat:'estetica'},
-  {id:'s7',nombre:'Endimed Facial Continuo',precio:55000,cat:'estetica'},
-  {id:'s8',nombre:'Endimed Corporal',precio:65000,cat:'corporal'},
-  // Mesoterapia — mercado SJ ~$65k facial
-  {id:'s9',nombre:'Mesoterapia Facial',precio:65000,cat:'estetica'},
-  {id:'s10',nombre:'Mesoterapia Corporal',precio:65000,cat:'corporal'},
-  {id:'s11',nombre:'Mesoterapia Capilar',precio:55000,cat:'capilar'},
-  // Faciales — referencia Andrea Lemos SJ: limpieza $65.800
-  {id:'s13',nombre:'Alquimia',precio:55000,cat:'estetica'},
-  {id:'s14',nombre:'Limpieza Facial Profunda',precio:65000,cat:'estetica'},
-  // Corporal
-  {id:'s15',nombre:'CM Slim',precio:65000,cat:'corporal'},
-  {id:'s16',nombre:'Encurve',precio:65000,cat:'corporal'},
-  // Suero / Wellness
-  {id:'s17',nombre:'Suero Terapia',precio:85000,cat:'suero'},
-  {id:'s18',nombre:'Masaje Terapéutico',precio:50000,cat:'wellness'},
-  {id:'s19',nombre:'Masaje Modelador Corporal',precio:65000,cat:'wellness'},
-  // Médico — consultas
-  {id:'s20',nombre:'Consulta Ginecológica',precio:90000,cat:'gine'},
-  {id:'s21',nombre:'Consulta Endocrinológica',precio:95000,cat:'endo'},
-  {id:'s22',nombre:'Terapia Descenso de Peso (sesión)',precio:130000,cat:'endo'},
+  // FACIALES
+  {id:'s_lfs',  nombre:'Limpieza Facial Simple',        precio:25000,  precioC:20000,  cat:'estetica'},
+  {id:'s_alq',  nombre:'Alquimia',                      precio:45000,  precioC:40000,  cat:'estetica'},
+  {id:'s_drm',  nombre:'Dermapen',                      precio:55000,  precioC:50000,  cat:'estetica'},
+  {id:'s_hol',  nombre:'Hollywood Peel',                precio:55000,  precioC:50000,  cat:'estetica'},
+  {id:'s_pel',  nombre:'Peeling',                       precio:50000,  precioC:45000,  cat:'estetica'},
+  {id:'s_hif',  nombre:'HIFU Facial',                   precio:100000, precioC:90000,  cat:'estetica'},
+  // MÉDICO / INYECTABLE
+  {id:'s_btx',  nombre:'Botox',                         precio:311000, precioC:290000, cat:'medico'},
+  {id:'s_bbt',  nombre:'Baby Botox',                    precio:200000, precioC:190000, cat:'medico'},
+  {id:'s_prp',  nombre:'Plasma Rico en Plaquetas (PRP)',precio:70000,  precioC:65000,  cat:'medico'},
+  {id:'s_mes',  nombre:'Mesoterapia Facial',            precio:50000,  precioC:45000,  cat:'estetica'},
+  {id:'s_pep',  nombre:'Peptonas',                      precio:60000,  precioC:55000,  cat:'medico'},
+  {id:'s_exo',  nombre:'Exonus',                        precio:155000, precioC:155000, cat:'medico'},
+  {id:'s_pdr',  nombre:'PDRN+ / NAD+',                  precio:120000, precioC:120000, cat:'medico'},
+  {id:'s_exv',  nombre:'Exo-V',                         precio:120000, precioC:120000, cat:'medico'},
+  // ENDYMED
+  {id:'s_er',   nombre:'Endymed RadioFR (sesión)',      precio:50000,  precioC:40000,  cat:'estetica'},
+  {id:'s_ei',   nombre:'Endymed Intensif (sesión)',     precio:380000, precioC:350000, cat:'estetica'},
+  {id:'s_ef',   nombre:'Endymed FSR (sesión)',          precio:350000, precioC:320000, cat:'estetica'},
+  {id:'s_eif',  nombre:'Endymed Intensif+FSR (sesión)', precio:500000, precioC:450000, cat:'estetica'},
+  {id:'s_eye',  nombre:'Endy Eyes (sesión)',            precio:50000,  precioC:50000,  cat:'estetica'},
+  {id:'s_efr',  nombre:'Endy FSR+Infine (sesión)',      precio:45000,  precioC:45000,  cat:'estetica'},
+  {id:'s_er3',  nombre:'Endymed RadioFR — Pack 3 ses.',precio:280000, precioC:280000, cat:'estetica'},
+  {id:'s_ei3',  nombre:'Endymed Intensif — Pack 3 ses.',precio:900000, precioC:900000, cat:'estetica'},
+  {id:'s_ef3',  nombre:'Endymed FSR — Pack 3 ses.',    precio:750000, precioC:750000, cat:'estetica'},
+  {id:'s_eif3', nombre:'Endymed Int+FSR — Pack 3 ses.',precio:1200000,precioC:1200000,cat:'estetica'},
+  {id:'s_eye4', nombre:'Endy Eyes — Pack 4 ses.',      precio:160000, precioC:160000, cat:'estetica'},
+  // CORPORAL
+  {id:'s_hic',  nombre:'HIFU Corporal',                 precio:75000,  precioC:65000,  cat:'corporal'},
+  {id:'s_crio', nombre:'Criolipolisis',                 precio:57000,  precioC:57000,  cat:'corporal'},
+  {id:'s_ucav', nombre:'Ultracavitación',               precio:35000,  precioC:30000,  cat:'corporal'},
+  {id:'s_mc',   nombre:'Mesoterapia Corporal',          precio:50000,  precioC:45000,  cat:'corporal'},
+  {id:'s_cms',  nombre:'CM Slim (sesión)',               precio:25000,  precioC:20000,  cat:'corporal'},
+  {id:'s_cms8', nombre:'CM Slim — Pack 8 ses.',         precio:100000, precioC:100000, cat:'corporal'},
+  {id:'s_enc',  nombre:'Encurve (sesión)',               precio:25000,  precioC:20000,  cat:'corporal'},
+  {id:'s_enc8', nombre:'Encurve — Pack 8 ses.',         precio:150000, precioC:150000, cat:'corporal'},
+  {id:'s_wow',  nombre:'Wow Shape',                     precio:75000,  precioC:65000,  cat:'corporal'},
+  {id:'s_erd1', nombre:'Endymed RF Corp. — 1 zona Pack 8',precio:380000,precioC:380000,cat:'corporal'},
+  {id:'s_erd2', nombre:'Endymed RF Corp. — 2 zonas Pack 8',precio:550000,precioC:550000,cat:'corporal'},
+  {id:'s_erd3', nombre:'Endymed RF Corp. — 3 zonas Pack 8',precio:650000,precioC:650000,cat:'corporal'},
+  // DEPILACIÓN MUJER
+  {id:'d_ax',   nombre:'Depil. Mujer — Axilas',         precio:22000,  precioC:19000,  cat:'depilacion'},
+  {id:'d_cav',  nombre:'Depil. Mujer — Cavado',         precio:23000,  precioC:20000,  cat:'depilacion'},
+  {id:'d_tdc',  nombre:'Depil. Mujer — Tiro de Cola',   precio:12650,  precioC:11000,  cat:'depilacion'},
+  {id:'d_boz',  nombre:'Depil. Mujer — Bozo',           precio:12650,  precioC:11000,  cat:'depilacion'},
+  {id:'d_bozm', nombre:'Depil. Mujer — Bozo y Mentón',  precio:19550,  precioC:17000,  cat:'depilacion'},
+  {id:'d_lab',  nombre:'Depil. Mujer — Línea Alba',     precio:11500,  precioC:10000,  cat:'depilacion'},
+  {id:'d_ros',  nombre:'Depil. Mujer — Rostro Completo',precio:23000,  precioC:20000,  cat:'depilacion'},
+  {id:'d_pat',  nombre:'Depil. Mujer — Patillas',       precio:13200,  precioC:11500,  cat:'depilacion'},
+  {id:'d_ded',  nombre:'Depil. Mujer — Dedos',          precio:9200,   precioC:8000,   cat:'depilacion'},
+  {id:'d_mpi',  nombre:'Depil. Mujer — Media Pierna',   precio:22000,  precioC:19000,  cat:'depilacion'},
+  {id:'d_pco',  nombre:'Depil. Mujer — Pierna Completa',precio:26500,  precioC:23000,  cat:'depilacion'},
+  {id:'d_mba',  nombre:'Depil. Mujer — Medio Brazo',    precio:21000,  precioC:18000,  cat:'depilacion'},
+  {id:'d_bco',  nombre:'Depil. Mujer — Brazo Completo', precio:25300,  precioC:22000,  cat:'depilacion'},
+  {id:'d_abd',  nombre:'Depil. Mujer — Abdomen',        precio:23000,  precioC:20000,  cat:'depilacion'},
+  {id:'d_glu',  nombre:'Depil. Mujer — Glúteos',        precio:24200,  precioC:21000,  cat:'depilacion'},
+  {id:'d_esp',  nombre:'Depil. Mujer — Espalda',        precio:28750,  precioC:25000,  cat:'depilacion'},
+  {id:'d_esb',  nombre:'Depil. Mujer — Espalda Baja',   precio:20700,  precioC:18000,  cat:'depilacion'},
+  // COMBOS DEPILACIÓN MUJER
+  {id:'dc1',    nombre:'Combo Depil. Mujer 1 (Ax+Cav+TdC)',precio:43000,precioC:43000,cat:'depilacion'},
+  {id:'dc2',    nombre:'Combo Depil. Mujer 2 (Ax+Cav+½Pierna)',precio:50000,precioC:50000,cat:'depilacion'},
+  {id:'dc3',    nombre:'Combo Depil. Mujer 3 (Ax+Cav+TdC+Pierna)',precio:58000,precioC:58000,cat:'depilacion'},
+  // DEPILACIÓN HOMBRE
+  {id:'dh_ax',  nombre:'Depil. Hombre — Axilas',        precio:26500,  precioC:23000,  cat:'depilacion'},
+  {id:'dh_cav', nombre:'Depil. Hombre — Cavado',        precio:35000,  precioC:28000,  cat:'depilacion'},
+  {id:'dh_tdc', nombre:'Depil. Hombre — Tiro de Cola',  precio:31500,  precioC:30000,  cat:'depilacion'},
+  {id:'dh_bar', nombre:'Depil. Hombre — Barba',         precio:28750,  precioC:25000,  cat:'depilacion'},
+  {id:'dh_ros', nombre:'Depil. Hombre — Rostro Completo',precio:31500, precioC:24000,  cat:'depilacion'},
+  {id:'dh_pat', nombre:'Depil. Hombre — Patillas',      precio:17500,  precioC:14000,  cat:'depilacion'},
+  {id:'dh_ded', nombre:'Depil. Hombre — Dedos',         precio:10000,  precioC:8000,   cat:'depilacion'},
+  {id:'dh_ore', nombre:'Depil. Hombre — Orejas',        precio:11500,  precioC:9000,   cat:'depilacion'},
+  {id:'dh_nuc', nombre:'Depil. Hombre — Nuca',          precio:16500,  precioC:13000,  cat:'depilacion'},
+  {id:'dh_cue', nombre:'Depil. Hombre — Cuello',        precio:14000,  precioC:11000,  cat:'depilacion'},
+  {id:'dh_mpi', nombre:'Depil. Hombre — Media Pierna',  precio:29000,  precioC:23000,  cat:'depilacion'},
+  {id:'dh_pco', nombre:'Depil. Hombre — Pierna Completa',precio:35000, precioC:28000,  cat:'depilacion'},
+  {id:'dh_mba', nombre:'Depil. Hombre — Medio Brazo',   precio:28000,  precioC:22500,  cat:'depilacion'},
+  {id:'dh_bco', nombre:'Depil. Hombre — Brazo Completo',precio:35000,  precioC:28000,  cat:'depilacion'},
+  {id:'dh_tor', nombre:'Depil. Hombre — Tórax',         precio:19000,  precioC:19000,  cat:'depilacion'},
+  {id:'dh_tab', nombre:'Depil. Hombre — Tórax y Abdomen',precio:35000, precioC:28000,  cat:'depilacion'},
+  {id:'dh_hom', nombre:'Depil. Hombre — Hombros',       precio:22500,  precioC:18000,  cat:'depilacion'},
+  {id:'dh_esp', nombre:'Depil. Hombre — Espalda',       precio:35000,  precioC:28000,  cat:'depilacion'},
+  {id:'dh_abd', nombre:'Depil. Hombre — Abdomen',       precio:20000,  precioC:16000,  cat:'depilacion'},
+  {id:'dh_glu', nombre:'Depil. Hombre — Glúteos',       precio:17500,  precioC:14000,  cat:'depilacion'},
+  // COMBOS DEPILACIÓN HOMBRE
+  {id:'dhc1',   nombre:'Combo Depil. Hombre 1 (Tor+Abd+Ax/Barba)',precio:42000,precioC:42000,cat:'depilacion'},
+  {id:'dhc2',   nombre:'Combo Depil. Hombre 2 (Tor+Abd+Pierna)',precio:53000,precioC:53000,cat:'depilacion'},
+  {id:'dhc3',   nombre:'Combo Depil. Hombre 3 (Tor+Abd+Ax+Pierna)',precio:70000,precioC:70000,cat:'depilacion'},
+  // MÉDICO (consultas)
+  {id:'s_gine', nombre:'Consulta Ginecológica',          precio:90000,  precioC:80000,  cat:'gine'},
+  {id:'s_endo', nombre:'Consulta Endocrinológica',       precio:95000,  precioC:85000,  cat:'endo'},
+  {id:'s_des',  nombre:'Terapia Descenso de Peso',       precio:130000, precioC:120000, cat:'endo'},
+  {id:'s_sue',  nombre:'Suero Terapia',                  precio:85000,  precioC:75000,  cat:'suero'},
 ];
 
 const DEFAULT_GASTOS = [
