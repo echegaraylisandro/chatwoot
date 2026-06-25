@@ -41,106 +41,63 @@ const PRECIO_CONSULTA = 40000;
 
 // ─── INFO DE TRATAMIENTOS ─────────────────────────────────────────────────────
 const INFO_TRATAMIENTOS = {
-  alquimia: `✨ *TRATAMIENTO ALQUIMIA — ONE DEPIL*
+  alquimia: `El Alquimia es un peeling médico de última generación que combina distintos activos en fases para renovar la piel de forma profunda y progresiva. Lo que más les gusta a las pacientes es que desde la primera sesión se nota un cambio real: la piel queda más luminosa, pareja, sin manchas y mucho más suave.
 
-Es un peeling médico de última generación que combina activos en distintas fases para lograr una renovación profunda, progresiva y segura de la piel.
+Lo realiza la Dra. Sabrina con protocolo médico, así que es seguro y personalizado. ¿Ya te hiciste algún peeling antes o sería la primera vez?`,
 
-💎 *Beneficios:*
-• Renueva la textura, logrando una piel más suave y uniforme
-• Aporta luminosidad y vitalidad inmediata
-• Disminuye manchas, poros dilatados e imperfecciones
-• Estimula la producción de colágeno y mejora la firmeza
-• Favorece la regeneración celular y el aspecto juvenil
+  prp: `El PRP — Plasma Rico en Plaquetas — es un tratamiento 100% natural porque se trabaja con tu propia sangre. Se extrae una muestra, se procesa y se obtiene un concentrado con factores de crecimiento que regeneran la piel y estimulan el crecimiento del cabello.
 
-👩‍⚕️ Realizado por profesionales con protocolos médicos que garantizan eficacia y seguridad.
+Para la piel deja un efecto de luminosidad y firmeza muy bueno. Para la caída de cabello es de los más efectivos que hay. Y al ser autólogo no hay riesgo de rechazo.
 
-🌿 *Resultado:* piel visiblemente más luminosa, fresca y rejuvenecida desde la primera aplicación. 🌟
+¿Lo consultás para rostro o para cabello?`,
 
-📅 ¿Te interesa? Te agendamos una consulta con la Dra. Sabrina para que te oriente personalmente 😊`,
+  mesoterapia: `La mesoterapia son microinyecciones de vitaminas, aminoácidos y activos específicos según lo que necesites. Sirve para flacidez, celulitis, caída de cabello, grasa localizada... los resultados se ven bastante rápido, desde las primeras sesiones.
 
-  prp: `🩸 *PRP — Plasma Rico en Plaquetas*
+Lo aplica la Dra. Sabrina. ¿Qué es lo que querés tratar?`,
 
-Es un tratamiento natural que se realiza con *tu propia sangre*. Se extrae una pequeña muestra, se procesa y se obtiene un concentrado rico en factores de crecimiento que ayudan a regenerar la piel y estimular el crecimiento del cabello.
+  peeling: `El peeling químico renueva las capas superficiales de la piel. Mejora manchas, cicatrices de acné, poros dilatados y arrugas finas. La Dra. Sabrina evalúa tu tipo de piel y elige el peeling más adecuado para vos.
 
-✨ *En el rostro:* piel más luminosa, firme y saludable
-💆‍♀️ *En el cuero cabelludo:* fortalece el cabello y ayuda a frenar la caída
+¿Ya te hiciste alguno antes o sería la primera vez?`,
 
-Al ser autólogo, es completamente seguro y biocompatible, sin riesgo de rechazo 🌿
+  botox: `El Botox relaja temporalmente los músculos que forman las líneas de expresión — frente, entrecejo, patas de gallo. Es rápido, sin cirugía y con recuperación prácticamente inmediata. Lo que más valoran las pacientes es que queda natural, no da cara rígida.
 
-Es un tratamiento natural, seguro y *personalizado*, porque se trabaja con tu propio plasma.
+Lo hace la Dra. Sabrina. Para este tratamiento recomendamos arrancar con una consulta para que te evalúe y te diga exactamente qué necesitás. ¿Te interesa que coordinemos eso?`,
 
-📅 ¿Querés que te agendemos una consulta para evaluar tu caso? 😊`,
+  endymed: `El Endymed Intensif + FSR es radiofrecuencia fraccionada con microagujas — una de las tecnologías más avanzadas que hay para rejuvenecimiento. Combina dos tecnologías: el Intensif trabaja desde adentro estimulando colágeno (ideal para cicatrices y flacidez profunda), y el FSR perfecciona la superficie, textura y poros.
 
-  mesoterapia: `💊 *Mesoterapia*
+El resultado es piel más firme, pareja y rejuvenecida. Para este tratamiento la Dra. Sabrina te hace una consulta primero para armar el protocolo ideal para tu caso. ¿Qué es lo que querés mejorar?`,
 
-Es un tratamiento médico-estético con microinyecciones de vitaminas, aminoácidos y activos específicos según tu necesidad.
+  endyeyes: `El EndyEyes es el tratamiento de radiofrecuencia específico para el contorno de ojos. Estimula el colágeno en las capas profundas, mejora la firmeza, suaviza las líneas finas y reduce bolsas. La mirada queda mucho más descansada y rejuvenecida.
 
-🔹 *¿Para qué sirve?*
-• Mejora la flacidez y la celulitis
-• Estimula la producción de colágeno
-• Aporta luminosidad, firmeza e hidratación
-• Trata la pérdida de cabello fortaleciendo los folículos desde la raíz
-• Favorece la reducción localizada de grasa
+Es no invasivo, seguro para todo tipo de piel. ¿Consultas para ese tratamiento o querés info de algo más?`,
 
-🔹 Es un procedimiento seguro, rápido y con resultados visibles desde las primeras sesiones.
+  endolift: `El Endolift es un tratamiento mínimamente invasivo con tecnología de hilo de luz Velas — básicamente un láser intradérmico que calienta y contrae los tejidos desde adentro, sin cirugía. Tensa la piel, define el óvalo facial, mejora la flacidez del cuello y también se puede hacer en cuerpo.
 
-📅 Podemos coordinar una consulta para evaluar tu caso y armar un plan personalizado 😊`,
+Los resultados son muy naturales y progresivos. Para este tratamiento la Dra. Sabrina hace una valoración previa para ver si es lo indicado para vos. ¿Querés que coordinemos eso?`,
 
-  peeling: `✨ *Peeling Químico — Dra. Sabrina Quiroga*
+  hifu: `El HIFU usa ultrasonido enfocado de alta intensidad para tensar la piel sin ninguna aguja ni corte. Llega a capas profundas que otros tratamientos no alcanzan, estimula el colágeno y el resultado es lifting progresivo durante los meses siguientes.
 
-Tratamiento médico-estético que utiliza soluciones específicas para renovar las capas superficiales de la piel.
+Se usa mucho para flacidez del rostro, cuello y papada. La Dra. Sabrina te hace una evaluación antes para ver el protocolo ideal. ¿Lo consultás para zona facial?`,
 
-✅ Mejora manchas, cicatrices de acné, poros dilatados y arrugas finas
-✅ Estimula la producción de colágeno
-✅ Deja la piel más luminosa, uniforme y saludable
-✅ Realizado de manera segura y personalizada por la Dra. Sabrina
+  criolipolisis: `La criolipólisis congela y elimina células grasas de forma definitiva en zonas específicas — panza, flancos, cartucheras, espalda. No es cirugía, no hay recuperación. El cuerpo va eliminando esas células de forma natural durante los meses siguientes.
 
-La Dra. evalúa tu tipo de piel y elige el peeling más adecuado para vos, para lograr los mejores resultados sin riesgos ✨
+Es ideal para esas zonas donde la dieta y el ejercicio no terminan de resolver. ¿Qué zona te interesa tratar?`,
 
-📅 ¿Querés que te agendemos una consulta con la Dra. Sabrina para que te oriente y planifique tu tratamiento? 😊`,
+  depilacion: `Para depilación definitiva trabajamos con Monolith Mediostar, que es tecnología láser diodo de última generación. Es la que mejores resultados da y es apta para todo tipo de vello y fototipo de piel.
 
-  botox: `💉 *Botox — Dra. Sabrina Quiroga*
+Tenemos precio por zona y combos con descuento. ¿Qué zonas te interesaría tratar?`,
 
-El Botox es un tratamiento seguro y mínimamente invasivo que relaja temporalmente los músculos responsables de las líneas de expresión.
+  limpieza: `La limpieza facial profunda combina vaporización, extracción, alta frecuencia y tratamiento final según tu tipo de piel. Deja la piel descongesionada, los poros limpios y mucho más luminosa.
 
-✨ *Beneficios:*
-• Suaviza arrugas en frente, entrecejo y patas de gallo
-• Previene la formación de nuevas líneas de expresión
-• Brinda un aspecto más descansado y rejuvenecido, manteniendo la naturalidad de tu rostro
-• Procedimiento rápido con recuperación prácticamente inmediata
+Está buena hacerla cada 30-45 días como mantenimiento. ¿Cuándo fue la última vez que te hiciste una?`,
 
-La Dra. Quiroga evaluará tu caso y te indicará la mejor opción para lograr un resultado armónico y natural 🌸
+  suero: `Los sueros terapéuticos son tratamientos con vitaminas y nutrientes que se aplican de forma endovenosa. Los hace el Dr. Antuña. Hay distintos protocolos según lo que necesites — energía, defensas, hidratación, antioxidante.
 
-📅 ¿Querés que te coordinemos un turno? ¡Escribinos! 😊`,
+¿Querés que te cuente más de alguno en particular?`,
 
-  endymed: `🔬 *Endymed Intensif + FSR Facial*
+  capilar: `Para caída y fortalecimiento del cabello tenemos mesoterapia capilar con microinyecciones de activos directamente en el cuero cabelludo, y también PRP capilar que es con tu propio plasma.
 
-Dispositivo de última generación para radiofrecuencia fraccionada con microagujas. Diseñado para rejuvenecimiento, mejora de texturas, reducción de poros, hiperpigmentación, arrugas y cicatrices.
-
-*Es un combo de dos tecnologías:*
-
-🔷 *EndyMed Intensif:* combina radiofrecuencia fraccionada con microagujas, estimulando la producción natural de colágeno y elastina para una piel firme, elástica y rejuvenecida.
-
-🔷 *EndyMed FSR:* ablación superficial y calentamiento volumétrico simultáneo. Rejuvenece la piel y trata la aspereza, arrugas y cicatrices en la cara.
-
-_Intensif actúa de adentro hacia afuera (ideal para cicatrices profundas), mientras que FSR perfecciona el tono y la textura de la superficie_ ✨
-
-📅 Para este tratamiento recomendamos una consulta previa con la Dra. Sabrina para planificar el protocolo ideal para vos 😊`,
-
-  endyeyes: `👁️ *EndyEyes — EndyMed*
-
-Tratamiento estético no invasivo basado en tecnología de radiofrecuencia 3DEEP® que estimula la producción de colágeno en las capas profundas de la piel.
-
-✨ *Beneficios:*
-• Mejora la firmeza del contorno de ojos
-• Suaviza líneas finas
-• Reduce la flacidez
-• Atenúa bolsas y signos de fatiga
-
-El resultado: una mirada más joven, luminosa y descansada 👁️✨
-Seguro y apto para todos los tipos de piel.
-
-📅 ¿Te interesa? Te agendamos una consulta para que la Dra. evalúe tu caso 😊`,
+Los dos tienen muy buenos resultados. ¿Tenés diagnóstico previo o sería la primera consulta?`,
 };
 
 // ─── KEYWORDS DE TRATAMIENTOS ─────────────────────────────────────────────────
@@ -298,20 +255,11 @@ async function handleMessage(sock, msg) {
     const trat = detectarTratamiento(body);
 
     if (trat && INFO_TRATAMIENTOS[trat]) {
-      // Tenemos info del tratamiento — la mandamos
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[trat] });
-      await new Promise(r => setTimeout(r, 1200));
-      await sock.sendMessage(jid, { text: `¿Ya te realizaste algún tratamiento similar antes, o sería tu primera vez?` });
       setConv(jid, 'esperando_previos', { tratamiento: trat });
-    } else if (trat === 'depilacion') {
-      await sock.sendMessage(jid, {
-        text: `Para depilación definitiva trabajamos con tecnología Monolith Mediostar, láser diodo de última generación, apta para todo tipo de vello y fototipos de piel. Contamos con precio por zona y también combos con descuento. ¿Qué zonas te interesaría tratar?`,
-      });
-      setConv(jid, 'esperando_previos', { tratamiento: 'depilacion' });
     } else {
-      // No detectamos tratamiento específico — preguntamos más
       await sock.sendMessage(jid, {
-        text: `Para orientarte mejor, ¿podés contarme qué es lo que te gustaría mejorar o tratar? Así te comento qué opciones tenemos para tu caso.`,
+        text: `Contame un poco más — ¿qué es lo que querés mejorar o tratar? Así te oriento mejor.`,
       });
       setConv(jid, 'esperando_previos', { tratamiento: body.slice(0, 50) });
     }
@@ -346,14 +294,12 @@ async function handleMessage(sock, msg) {
   if (tratamientoDirecto && !conv) {
     if (INFO_TRATAMIENTOS[tratamientoDirecto]) {
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[tratamientoDirecto] });
-      await new Promise(r => setTimeout(r, 1200));
-      await sock.sendMessage(jid, { text: `¿Ya te realizaste algún tratamiento similar antes, o sería tu primera vez?` });
       setConv(jid, 'esperando_previos', { tratamiento: tratamientoDirecto });
-    } else if (tratamientoDirecto === 'depilacion') {
+    } else {
       await sock.sendMessage(jid, {
-        text: `Para depilación definitiva trabajamos con tecnología Monolith Mediostar, láser diodo de última generación. ¿Qué zonas te interesan tratar?`,
+        text: `${saludoHora()}${nombre ? ' ' + nombre : ''}, te habla Aldana de One Depil. Consultame lo que necesitás que te ayudo.`,
       });
-      setConv(jid, 'esperando_previos', { tratamiento: 'depilacion' });
+      setConv(jid, 'esperando_tratamiento');
     }
     return;
   }
@@ -368,7 +314,7 @@ async function handleMessage(sock, msg) {
 
   if (quierePrecios) {
     await sock.sendMessage(jid, {
-      text: `Los valores dependen del tratamiento y la zona a tratar. ¿Sobre qué tratamiento querés consultar?`,
+      text: `Los valores dependen del tratamiento y la zona. ¿Sobre qué tratamiento querés consultar?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -376,7 +322,7 @@ async function handleMessage(sock, msg) {
 
   if (quiereServicios) {
     await sock.sendMessage(jid, {
-      text: `En One Depil realizamos: depilación definitiva (Monolith Mediostar), Botox y Baby Botox, Endolift facial y corporal, Endymed Intensif + FSR, EndyEyes, HIFU, Criolipolisis, Ultracavitación, Mesoterapia, PRP, Limpiezas faciales, Peeling, Alquimia, Suero terapias, Descenso de peso y Ginecología. ¿Hay alguno en particular sobre el que quieras información?`,
+      text: `Hacemos depilación definitiva con láser Monolith Mediostar, Botox, Endolift, Endymed Intensif+FSR, EndyEyes, HIFU, Criolipolisis, Mesoterapia, PRP, Peeling, Alquimia, Limpiezas faciales, Suero terapias y también Ginecología y Descenso de peso. ¿Hay alguno en particular que te interesa?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -466,6 +412,72 @@ function generarBriefing(data) {
   return txt;
 }
 
+// ─── CIERRE FINANCIERO ───────────────────────────────────────────────────────
+function generarCierreFinanciero(data) {
+  const hoy = today();
+  const turnosHoy = (data.turnos || []).filter(t => t.fecha === hoy && t.estado !== 'cancelado');
+  const fechaStr = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Argentina/San_Juan' });
+
+  let totalCobrado = 0;
+  let totalPendiente = 0;
+
+  let txt = `*ONE DEPIL — Cierre del ${fechaStr}*\n\n`;
+
+  if (turnosHoy.length === 0) {
+    txt += 'Sin turnos registrados hoy.\n';
+  } else {
+    txt += `*${turnosHoy.length} turno(s):*\n\n`;
+    turnosHoy.forEach((t, i) => {
+      const cobro = (data.cobros || []).find(c => c.turnoId === t.id || (c.pacienteId === t.pacienteId && c.fecha === hoy));
+      const monto = cobro?.monto || t.precio || 0;
+      const estado = cobro?.estado || 'sin registrar';
+      const metodo = cobro?.metodo || '-';
+      const cuotas = cobro?.cuotas ? ` (${cobro.cuotas} cuotas)` : '';
+      const saldo = cobro?.saldo || 0;
+
+      if (cobro?.estado === 'pagado' || cobro?.estado === 'cobrado') totalCobrado += monto;
+      else if (monto > 0) totalPendiente += saldo || monto;
+
+      txt += `${i + 1}. *${t.paciente || '?'}* — ${t.hora}hs\n`;
+      txt += `   Tratamiento: ${t.servicio || '-'}\n`;
+      txt += `   Monto: ${fmtPeso(monto)}${cuotas}\n`;
+      txt += `   Cobro: ${estado}${metodo !== '-' ? ' · ' + metodo : ''}\n`;
+      if (saldo > 0) txt += `   Saldo pendiente: ${fmtPeso(saldo)}\n`;
+      txt += '\n';
+    });
+  }
+
+  txt += `─────────────────────\n`;
+  txt += `Cobrado hoy: *${fmtPeso(totalCobrado)}*\n`;
+  if (totalPendiente > 0) txt += `Pendiente de cobro: *${fmtPeso(totalPendiente)}*\n`;
+
+  // cobros con cuotas vencidas de cualquier fecha
+  const enCuotas = (data.cobros || []).filter(c => c.cuotas && c.saldo > 0 && c.estado !== 'pagado');
+  if (enCuotas.length > 0) {
+    txt += `\nPacientes con cuotas pendientes: ${enCuotas.length}`;
+  }
+
+  return txt;
+}
+
+function generarAlertaDeudores(data) {
+  const enCuotas = (data.cobros || []).filter(c => c.cuotas && c.saldo > 0 && c.estado !== 'pagado');
+  if (enCuotas.length === 0) return null;
+
+  let txt = `*ONE DEPIL — Deudores con cuotas pendientes*\n\n`;
+  enCuotas.forEach((c, i) => {
+    const pac = (data.pacientes || []).find(p => p.id === c.pacienteId);
+    const nombre = pac?.nombre || c.paciente || 'Paciente sin nombre';
+    const tel = pac?.tel || c.tel || '-';
+    txt += `${i + 1}. *${nombre}*\n`;
+    txt += `   Tel: ${tel}\n`;
+    txt += `   Tratamiento: ${c.servicio || '-'}\n`;
+    txt += `   Saldo: ${fmtPeso(c.saldo)} (${c.cuotas} cuotas)\n\n`;
+  });
+  txt += `Comunicarse con cada uno para coordinar el pago.`;
+  return txt;
+}
+
 // ─── CRONS ───────────────────────────────────────────────────────────────────
 function iniciarCrons(sock) {
   // Recordatorios diarios a los pacientes
@@ -513,9 +525,30 @@ function iniciarCrons(sock) {
     console.log('[CRON] Reporte enviado');
   }, { timezone: 'America/Argentina/San_Juan' });
 
+  // Cierre financiero diario — 21:15hs, solo a DIRECCION (no Aldana)
+  cron.schedule(cfg.CRON_CIERRE, async () => {
+    const data = loadData();
+    const txt  = generarCierreFinanciero(data);
+    for (const m of cfg.DIRECCION) {
+      await sock.sendMessage(m.wa, { text: txt }).catch(() => {});
+    }
+    console.log('[CRON] Cierre financiero enviado a DIRECCION');
+  }, { timezone: 'America/Argentina/San_Juan' });
+
+  // Alerta deudores — lunes 10am, solo a Aldana
+  cron.schedule(cfg.CRON_DEUDORES, async () => {
+    const data = loadData();
+    const txt  = generarAlertaDeudores(data);
+    if (!txt) { console.log('[CRON] Deudores: sin pendientes'); return; }
+    await sock.sendMessage(cfg.ALDANA_WA, { text: txt }).catch(() => {});
+    console.log('[CRON] Alerta deudores enviada a Aldana');
+  }, { timezone: 'America/Argentina/San_Juan' });
+
   console.log('[CRON] Recordatorios:', cfg.CRON_RECORDATORIOS);
   console.log('[CRON] Briefing:', cfg.CRON_BRIEFING);
   console.log('[CRON] Reporte consultas:', cfg.CRON_REPORTE);
+  console.log('[CRON] Cierre financiero:', cfg.CRON_CIERRE);
+  console.log('[CRON] Alerta deudores:', cfg.CRON_DEUDORES);
 }
 
 // ─── CONEXIÓN ────────────────────────────────────────────────────────────────
