@@ -89,23 +89,37 @@ const RESP = {
 Para ver precios respondé *2* o escribí *precios* 😊`,
 
   precios: () =>
-    `💰 *Precios orientativos (actualizado Jun 2026):*
+    `💰 *Precios (actualizado Jun 2026):*
 
-🪒 Depilación Definitiva:
-  • Zona pequeña: ${fmtPeso(28000)} c/sesión
-  • Zona mediana: ${fmtPeso(55000)} c/sesión
-  • Zona grande: ${fmtPeso(90000)} c/sesión
-  • Cuerpo completo: ${fmtPeso(220000)}
+🪒 *Depilación Definitiva (Monolith Mediostar):*
+  • Axilas: ${fmtPeso(22000)} lista / ${fmtPeso(19000)} contado
+  • Bikini: ${fmtPeso(22000)} / ${fmtPeso(19000)}
+  • Bozo: ${fmtPeso(10000)} / ${fmtPeso(8000)}
+  • Cara completa: ${fmtPeso(30000)} / ${fmtPeso(26000)}
+  • Pierna completa: ${fmtPeso(26500)} / ${fmtPeso(23000)}
+  • Cuerpo completo (mujer): ${fmtPeso(160000)} / ${fmtPeso(140000)}
 
-💉 Botox (por zona): ${fmtPeso(420000)}
-🌊 Endolift Facial: ${fmtPeso(320000)}
-🔬 Endimed Facial Intensivo: ${fmtPeso(180000)}
-💊 Mesoterapia: ${fmtPeso(65000)}
-🩸 PRP: ${fmtPeso(180000)}
-💧 Suero Terapia: ${fmtPeso(85000)}
-🧖 Masaje: desde ${fmtPeso(50000)}
+💉 *Médico-Estéticos:*
+  • Botox (1 zona): ${fmtPeso(311000)} / ${fmtPeso(290000)}
+  • Baby Botox: ${fmtPeso(277000)} / ${fmtPeso(258000)}
+  • PRP facial: ${fmtPeso(70000)} / ${fmtPeso(65000)}
+  • Relleno labial: ${fmtPeso(255000)} / ${fmtPeso(237000)}
+  • Endolift Facial: ${fmtPeso(480000)} / ${fmtPeso(445000)}
+  • Endolift Corporal: ${fmtPeso(550000)} / ${fmtPeso(510000)}
+  • HIFU Facial: ${fmtPeso(350000)} / ${fmtPeso(325000)}
+  • Criolipolisis: ${fmtPeso(250000)} / ${fmtPeso(232000)}
 
-📦 *Paquetes con descuento disponibles!*
+✨ *Estética Facial:*
+  • Limpieza facial simple: ${fmtPeso(25000)} / ${fmtPeso(20000)}
+  • Limpieza facial profunda: ${fmtPeso(32000)} / ${fmtPeso(26000)}
+  • Endymed Facial (sesión): ${fmtPeso(180000)} / ${fmtPeso(165000)}
+  • Mesoterapia facial: ${fmtPeso(90000)} / ${fmtPeso(80000)}
+
+💧 *Sueros & Terapias:*
+  • Suero terapia: ${fmtPeso(55000)} / ${fmtPeso(50000)}
+
+📦 *Packs con descuento disponibles!*
+Precio lista = tarjeta · Precio contado = efectivo/transferencia
 
 Para turnos → escribí *turno* o respondé *3* 😊`,
 
