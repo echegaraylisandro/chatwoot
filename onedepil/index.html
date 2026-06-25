@@ -114,6 +114,26 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
 .turno-servicio{font-size:12px;color:var(--text2)}
 .turno-prof{font-size:11px;color:var(--purple)}
 .turno-actions{display:flex;gap:6px;flex-shrink:0}
+/* GANTT */
+.gantt-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.gantt-table{width:100%;border-collapse:collapse;min-width:600px}
+.gantt-table th{background:var(--surface2);font-size:11px;font-weight:600;padding:6px 4px;text-align:center;border:1px solid var(--border);color:var(--text2)}
+.gantt-table td{border:1px solid var(--border);padding:2px;vertical-align:top;min-width:80px}
+.gantt-prof-cell{background:var(--surface2);padding:6px 8px;font-size:12px;font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2}
+.gantt-slot{font-size:10px;border-radius:4px;padding:2px 4px;margin:1px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff}
+.gantt-slot:hover{opacity:.85}
+.agenda-vista-btns{display:flex;gap:4px}
+.vista-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer}
+.vista-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+/* MES GRID */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:8px}
+.cal-header{text-align:center;font-size:11px;font-weight:700;color:var(--text2);padding:4px}
+.cal-cell{background:var(--surface2);border-radius:6px;min-height:64px;padding:4px;cursor:pointer;border:1px solid transparent}
+.cal-cell:hover{border-color:var(--gold)}
+.cal-cell.hoy{border-color:var(--gold);background:rgba(212,175,55,.08)}
+.cal-cell.otro-mes{opacity:.35}
+.cal-day-num{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:2px}
+.cal-dot{font-size:10px;border-radius:3px;padding:1px 3px;margin-bottom:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff}
 
 /* STOCK */
 .stock-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -251,12 +271,17 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
 <div id="tab-agenda" class="tab-panel">
   <div class="sec-header">
     <h2>📅 Agenda</h2>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="agenda-vista-btns">
+        <button class="vista-btn active" id="vbtn-dia" onclick="setVistaAgenda('dia')">Día</button>
+        <button class="vista-btn" id="vbtn-semana" onclick="setVistaAgenda('semana')">Semana</button>
+        <button class="vista-btn" id="vbtn-mes" onclick="setVistaAgenda('mes')">Mes</button>
+      </div>
       <input type="date" id="agenda-fecha" style="width:150px" onchange="renderAgenda()"/>
       <button class="btn btn-gold" onclick="openModalTurno()">+ Turno</button>
     </div>
   </div>
-  <div class="card" style="margin-bottom:12px">
+  <div class="card" style="margin-bottom:12px" id="agenda-prof-filtros">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="filtrarAgendaProf('')" id="fpbtn-todos">Todos</button>
       <div id="prof-filter-btns"></div>
@@ -1153,6 +1178,111 @@ function renderAgenda(){
 }
 
 function filtrarAgendaProf(pid){agendaFiltroProf=pid;renderAgenda();}
+
+let vistaAgenda='dia';
+function setVistaAgenda(v){
+  vistaAgenda=v;
+  ['dia','semana','mes'].forEach(x=>{
+    const b=document.getElementById('vbtn-'+x);
+    if(b){b.classList.toggle('active',x===v);}
+  });
+  const filtros=document.getElementById('agenda-prof-filtros');
+  if(filtros)filtros.style.display=(v==='dia')?'':'none';
+  renderAgenda();
+}
+
+function renderAgendaSemana(){
+  const fechaEl=document.getElementById('agenda-fecha');
+  if(!fechaEl.value)fechaEl.value=today();
+  const base=new Date(fechaEl.value+'T12:00:00');
+  const dow=base.getDay();
+  const lunes=new Date(base);lunes.setDate(base.getDate()-(dow===0?6:dow-1));
+  const dias=[];
+  for(let i=0;i<7;i++){const d=new Date(lunes);d.setDate(lunes.getDate()+i);dias.push(d);}
+  const diasStr=dias.map(d=>d.toISOString().slice(0,10));
+  const DIAS_ES=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const profs=STATE.profs.filter(p=>agendaFiltroProf?p.id===agendaFiltroProf:true);
+
+  let html='<div class="gantt-wrap"><table class="gantt-table"><thead><tr>';
+  html+=`<th style="min-width:90px;position:sticky;left:0;z-index:3;background:var(--surface2)">Profesional</th>`;
+  dias.forEach((d,i)=>{
+    const es=d.toISOString().slice(0,10)===today();
+    html+=`<th style="${es?'color:var(--gold);font-weight:800':''}">
+      ${DIAS_ES[i]}<br><span style="font-size:10px">${d.getDate()}/${d.getMonth()+1}</span>
+    </th>`;
+  });
+  html+='</tr></thead><tbody>';
+
+  profs.forEach(prof=>{
+    html+=`<tr><td class="gantt-prof-cell" style="color:${prof.color}">${prof.nombre.split(' ').slice(-1)[0]}</td>`;
+    diasStr.forEach(fecha=>{
+      let turnos=STATE.turnos.filter(t=>t.fecha===fecha&&(t.profId===prof.id||(t.profesional||'').includes(prof.nombre.split(' ').slice(-1)[0])));
+      turnos.sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+      html+=`<td>`;
+      if(turnos.length){
+        turnos.forEach(t=>{
+          html+=`<div class="gantt-slot" style="background:${prof.color}" onclick="openModalTurno('${t.id}')" title="${t.paciente||''} — ${t.servicio||''}">
+            ${t.hora||''} ${t.paciente?.split(' ')[0]||''}
+          </div>`;
+        });
+      }
+      html+=`</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+='</tbody></table></div>';
+
+  const desde=dias[0].toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+  const hasta=dias[6].toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+  document.getElementById('agenda-container').innerHTML=
+    `<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Semana del ${desde} al ${hasta}</div>`+html;
+}
+
+function renderAgendaMes(){
+  const fechaEl=document.getElementById('agenda-fecha');
+  if(!fechaEl.value)fechaEl.value=today();
+  const base=new Date(fechaEl.value+'T12:00:00');
+  const anio=base.getFullYear(),mes=base.getMonth();
+  const primerDia=new Date(anio,mes,1);
+  const ultimoDia=new Date(anio,mes+1,0);
+  const dow0=primerDia.getDay();
+  const offset=dow0===0?6:dow0-1;
+  const DIAS_ES=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // color por prof para los dots
+  const profColor=(t)=>{
+    const p=STATE.profs.find(x=>x.id===t.profId||(t.profesional||'').includes(x.nombre.split(' ').slice(-1)[0]));
+    return p?p.color:'var(--gold)';
+  };
+
+  let html=`<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px;text-align:center">${MESES[mes]} ${anio}</div>`;
+  html+=`<div class="cal-grid">`;
+  DIAS_ES.forEach(d=>html+=`<div class="cal-header">${d}</div>`);
+
+  // celdas vacías al inicio
+  for(let i=0;i<offset;i++)html+=`<div class="cal-cell otro-mes"></div>`;
+
+  for(let d=1;d<=ultimoDia.getDate();d++){
+    const fechaStr=`${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esHoy=fechaStr===today();
+    const turnos=STATE.turnos.filter(t=>t.fecha===fechaStr).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+    html+=`<div class="cal-cell${esHoy?' hoy':''}" onclick="irADia('${fechaStr}')">
+      <div class="cal-day-num">${d}</div>`;
+    turnos.slice(0,3).forEach(t=>{
+      html+=`<div class="cal-dot" style="background:${profColor(t)}">${t.hora||''} ${(t.paciente||'').split(' ')[0]}</div>`;
+    });
+    if(turnos.length>3)html+=`<div style="font-size:9px;color:var(--text2)">+${turnos.length-3} más</div>`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  document.getElementById('agenda-container').innerHTML=html;
+}
+
+function irADia(fecha){
+  document.getElementById('agenda-fecha').value=fecha;
+  setVistaAgenda('dia');
+}
 
 // ========== PACIENTES ==========
 function renderPacientes(){

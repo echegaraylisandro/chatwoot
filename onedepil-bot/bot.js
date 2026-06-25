@@ -98,6 +98,26 @@ Está buena hacerla cada 30-45 días como mantenimiento. ¿Cuándo fue la últim
   capilar: `Para caída y fortalecimiento del cabello tenemos mesoterapia capilar con microinyecciones de activos directamente en el cuero cabelludo, y también PRP capilar que es con tu propio plasma.
 
 Los dos tienen muy buenos resultados. ¿Tenés diagnóstico previo o sería la primera consulta?`,
+
+  encurve: `El enCurve es un tratamiento de radiofrecuencia sin contacto que reduce grasa localizada y remodela el cuerpo. Actúa en la capa adiposa calentando las células de grasa para que el cuerpo las elimine de forma natural, sin cirugía y sin ningún tipo de dolor.
+
+Es muy bueno para panza, flancos y cartucheras. Se notan cambios desde las primeras sesiones. ¿Te interesa una zona en particular?`,
+
+  cmslim: `El CM Slim combina campos electromagnéticos de alta intensidad con radiofrecuencia para tonificar músculos y reducir grasa al mismo tiempo. En una sola sesión hace el equivalente a miles de contracciones musculares — es ideal para abdomen, glúteos, brazos y piernas.
+
+Tenemos distintos protocolos según el objetivo: tonificación, volumen o reducción. ¿Qué zona querés trabajar?`,
+
+  masajes: `Hacemos masajes terapéuticos para contracturas y dolor muscular, y masajes modeladores que combinan técnicas de drenaje linfático y reducción de medidas. Son muy buenos para complementar tratamientos estéticos.
+
+¿Estás pensando en algo más terapéutico o para modelar el cuerpo?`,
+
+  ginecologia: `El Dr. Andrés Echegaray atiende consultas ginecológicas en la clínica. Podés coordinar una consulta directamente con él para controles, consultas o lo que necesites.
+
+¿Querés que te busquemos un turno disponible?`,
+
+  endocrinologia: `La Dra. Laura Otiñano atiende consultas de endocrinología y descenso de peso. Si tenés algo que ver con metabolismo, tiroides, diabetes, o simplemente querés bajar de peso con un seguimiento médico, ella es la indicada.
+
+¿Querés que coordinemos una consulta?`,
 };
 
 // ─── KEYWORDS DE TRATAMIENTOS ─────────────────────────────────────────────────
@@ -117,6 +137,11 @@ function detectarTratamiento(msg) {
   if (n.includes('limpieza facial') || n.includes('limpieza')) return 'limpieza';
   if (n.includes('suero') || n.includes('vitamina')) return 'suero';
   if (n.includes('mesoterapia capilar') || n.includes('caida') || n.includes('pelo') || n.includes('cabello')) return 'capilar';
+  if (n.includes('encurve') || n.includes('en curve')) return 'encurve';
+  if (n.includes('cmslim') || n.includes('cm slim') || n.includes('electro') || n.includes('slim')) return 'cmslim';
+  if (n.includes('masaje')) return 'masajes';
+  if (n.includes('ginecolog') || n.includes('echegaray') || n.includes('gineco')) return 'ginecologia';
+  if (n.includes('endocrinolog') || n.includes('otinano') || n.includes('otiñano') || n.includes('descenso de peso') || n.includes('adelgazar') || n.includes('bajar de peso')) return 'endocrinologia';
   return null;
 }
 
@@ -280,6 +305,29 @@ async function handleMessage(sock, msg) {
         text: `Hola${nombre ? ' ' + nombre : ''}, qué bueno que nos escribís. ¿En qué te podemos ayudar?`,
       });
     }
+    return;
+  }
+
+  // ── RECOMENDACIÓN POR ZONA / OBJETIVO ────────────────────────────────────────
+  const nBody = normalize(body);
+  const quiereRecomendacion = nBody.includes('que me recomiendas') || nBody.includes('que tratamiento') || nBody.includes('que me recomendas') || nBody.includes('cual me recomendas') || nBody.includes('que opcion');
+  if (quiereRecomendacion) {
+    let resp = '';
+    if (nBody.includes('abdomen') || nBody.includes('panza') || nBody.includes('barriga') || nBody.includes('vientre')) {
+      resp = `Para reducir abdomen tenemos tres opciones muy buenas:\n\n• *Criolipólisis* — elimina grasa de forma definitiva, sin cirugía\n• *enCurve* — radiofrecuencia que reduce y remodela\n• *CM Slim* — tonifica músculo y reduce grasa a la vez\n\nLo ideal es una valoración con la Dra. Sabrina para ver cuál se adapta mejor a tu caso y tu objetivo. ¿Te interesa coordinar eso?`;
+    } else if (nBody.includes('rostro') || nBody.includes('cara') || nBody.includes('facial') || nBody.includes('arrugas') || nBody.includes('flacidez')) {
+      resp = `Para rostro y flacidez facial tenemos:\n\n• *Endolift* — láser intradérmico que tensa y define el óvalo\n• *Endymed Intensif+FSR* — radiofrecuencia fraccionada, ideal para textura y firmeza\n• *HIFU* — lifting sin agujas ni cirugía\n• *Botox* — suaviza líneas de expresión\n\n¿Alguno te interesa en particular o querés que la Dra. Sabrina te evalúe?`;
+    } else if (nBody.includes('celulitis') || nBody.includes('cartuchera') || nBody.includes('flanco') || nBody.includes('pierna') || nBody.includes('muslo')) {
+      resp = `Para celulitis y cartucheras las mejores opciones son:\n\n• *Criolipólisis* — para reducir volumen de grasa\n• *Mesoterapia corporal* — mejora la textura y circulación\n• *enCurve* — remodela y afirma\n\n¿Querés info de alguno en particular?`;
+    } else if (nBody.includes('gluteo') || nBody.includes('glúteo') || nBody.includes('cola')) {
+      resp = `Para glúteos el *CM Slim* es excelente — tonifica y da volumen muscular sin cirugía. También se puede complementar con mesoterapia para mejorar la textura de la piel.\n\n¿Querés más info del CM Slim?`;
+    } else if (nBody.includes('manchas') || nBody.includes('poros') || nBody.includes('acne') || nBody.includes('acné')) {
+      resp = `Para manchas, poros y acné tenemos:\n\n• *Alquimia* — peeling médico de renovación profunda\n• *Peeling químico* — para manchas y textura\n• *Endymed FSR* — mejora textura y poros\n\n¿Qué es lo principal que querés mejorar?`;
+    } else {
+      resp = `Contame un poco más — ¿qué zona o qué resultado querés lograr? Con eso puedo orientarte mejor sobre qué tratamiento se adapta a lo que buscás.`;
+    }
+    await sock.sendMessage(jid, { text: resp });
+    setConv(jid, 'esperando_tratamiento');
     return;
   }
 
