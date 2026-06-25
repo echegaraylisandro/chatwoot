@@ -986,6 +986,19 @@ function fmtFecha(d){if(!d)return '';const[y,m,dd]=d.split('-');return`${dd}/${m
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
 
 function profById(id){return STATE.profs.find(p=>p.id===id)||{nombre:'—',esp:'',color:'#666'}}
+
+// Busca el profId más cercano por nombre (para mapear datos importados de Koibox)
+function mapProfId(nombreStr){
+  if(!nombreStr) return '';
+  const n = nombreStr.toLowerCase();
+  const match = STATE.profs.find(p => {
+    const pn = p.nombre.toLowerCase();
+    // Coincidencia exacta o apellido incluido en el string
+    return pn === n || n.includes(pn) || pn.includes(n) ||
+      p.nombre.split(' ').slice(1).some(part => n.includes(part.toLowerCase()) && part.length > 3);
+  });
+  return match?.id || '';
+}
 function svcById(id){return STATE.servicios.find(s=>s.id===id)||{nombre:'—',precio:0}}
 
 // ========== CLOCK ==========
@@ -1073,13 +1086,16 @@ function renderInicio(){
 function turnoCardHTML(t, compact=false){
   const prof=profById(t.profId);
   const svc=svcById(t.svcId);
+  const profNombreDisplay = (prof.nombre !== '—') ? prof.nombre : (t.profesional || t.profNombre || 'Sin asignar');
+  const profColor = (prof.color !== '#666') ? prof.color : '#a09880';
+  const svcNombreDisplay = (svc.nombre !== '—') ? svc.nombre : (t.servicio || '—');
   const estadoBadge={pendiente:'badge-gold',confirmado:'badge-green',atendido:'badge-blue',cancelado:'badge-red'}[t.estado]||'badge-gray';
-  return`<div class="turno-card" style="border-left-color:${prof.color}">
+  return`<div class="turno-card" style="border-left-color:${profColor}">
     <div class="turno-info">
       <span class="turno-hora">${t.hora}</span>
       <div class="turno-paciente">${t.paciente}</div>
-      <div class="turno-servicio">${svc.nombre} · ${fmtPeso(svc.precio)}</div>
-      <div class="turno-prof">${prof.nombre}</div>
+      <div class="turno-servicio">${svcNombreDisplay}${svc.precio?` · ${fmtPeso(svc.precio)}`:''}</div>
+      <div class="turno-prof" style="color:${profColor}">${profNombreDisplay}</div>
     </div>
     <div class="turno-actions">
       <span class="badge ${estadoBadge}">${t.estado}</span>
@@ -1108,17 +1124,24 @@ function renderAgenda(){
   if(agendaFiltroProf)turnos=turnos.filter(t=>t.profId===agendaFiltroProf);
   turnos.sort((a,b)=>a.hora.localeCompare(b.hora));
 
-  // Group by prof
+  // Group by prof — usa profId si existe, sino el nombre del profesional del turno
   const porProf={};
-  turnos.forEach(t=>{if(!porProf[t.profId])porProf[t.profId]=[];porProf[t.profId].push(t)});
+  turnos.forEach(t=>{
+    const key = t.profId || ('_'+( t.profesional || t.profNombre || 'sin_asignar'));
+    if(!porProf[key])porProf[key]=[];
+    porProf[key].push(t);
+  });
 
   let html='';
   if(turnos.length===0){
     html='<div class="card" style="text-align:center;padding:30px;color:var(--text2)">Sin turnos para esta fecha</div>';
   } else {
-    Object.entries(porProf).forEach(([pid,ts])=>{
-      const prof=profById(pid);
-      html+=`<div class="agenda-day"><div class="agenda-day-title" style="color:${prof.color}">${prof.nombre} — ${prof.esp}</div>`;
+    Object.entries(porProf).forEach(([key,ts])=>{
+      const prof = profById(key); // funciona si key es un profId real
+      const nombre = prof.nombre !== '—' ? prof.nombre : (ts[0].profesional || ts[0].profNombre || 'Sin asignar');
+      const esp = prof.esp || '';
+      const color = prof.color !== '#666' ? prof.color : '#a09880';
+      html+=`<div class="agenda-day"><div class="agenda-day-title" style="color:${color}">${nombre}${esp?' — '+esp:''}</div>`;
       html+=ts.map(t=>turnoCardHTML(t)).join('');
       html+=`</div>`;
     });
@@ -2450,6 +2473,18 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
 
+function repararProfIds() {
+  // Asigna profId a turnos que solo tienen nombre de profesional (datos Koibox)
+  let reparados = 0;
+  STATE.turnos.forEach(t => {
+    if (!t.profId && (t.profesional || t.profNombre)) {
+      const id = mapProfId(t.profesional || t.profNombre);
+      if (id) { t.profId = id; reparados++; }
+    }
+  });
+  if (reparados > 0) save();
+}
+
 async function autoImportKoibox() {
   // Si no hay datos locales, importar automáticamente los datos embebidos
   let importado = false;
@@ -2474,7 +2509,18 @@ async function autoImportKoibox() {
       const writer = ds.writable.getWriter();
       writer.write(bytes); writer.close();
       const out = await new Response(ds.readable).text();
-      STATE.turnos = JSON.parse(out);
+      const turnos = JSON.parse(out);
+      // Mapear profesional y paciente
+      turnos.forEach(t => {
+        if (!t.profId && (t.profesional || t.profNombre)) {
+          t.profId = mapProfId(t.profesional || t.profNombre);
+        }
+        if (!t.pacienteId && t.tel) {
+          const pac = STATE.pacientes.find(p => p.tel && p.tel.replace(/\D/g,'').endsWith(t.tel.slice(-8)));
+          if (pac) t.pacienteId = pac.id;
+        }
+      });
+      STATE.turnos = turnos;
       save();
       importado = true;
     } catch(e) { console.error('Auto-import turnos:', e); }
@@ -2484,6 +2530,7 @@ async function autoImportKoibox() {
 
 async function init() {
   await autoImportKoibox();
+  repararProfIds();
   try{renderInicio()}catch(e){console.error(e)}
 }
 
