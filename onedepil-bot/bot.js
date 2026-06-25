@@ -193,6 +193,13 @@ async function notificarEquipo(sock, txt) {
   }
 }
 
+function saludoHora() {
+  const h = new Date().toLocaleString('es-AR', {hour:'numeric', hour12:false, timeZone:'America/Argentina/San_Juan'});
+  const n = parseInt(h);
+  if (n < 12) return 'Buenos días';
+  if (n < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+}
 // ─── FLUJO DE PROSPECCIÓN ─────────────────────────────────────────────────────
 async function handleMessage(sock, msg) {
   const jid  = msg.key.remoteJid;
@@ -222,11 +229,11 @@ async function handleMessage(sock, msg) {
     if (turnosPendientes.length > 0) {
       const t = turnosPendientes[0];
       await sock.sendMessage(jid, {
-        text: `Buenísimo${nombre ? ', ' + nombre : ''}! 🙌 Tu turno queda confirmado para el *${fmtFecha(t.fecha)} a las ${t.hora}hs*.\n\n¡Te esperamos! 🌸`,
+        text: `Perfecto${nombre ? ' ' + nombre : ''}, turno confirmado para el ${fmtFecha(t.fecha)} a las ${t.hora}hs. Te esperamos.`,
       });
       await notificarEquipo(sock, `✅ *Turno confirmado*\n👤 ${paciente?.nombre || num}\n📅 ${fmtFecha(t.fecha)} ${t.hora}hs — ${t.servicio || ''}`);
     } else {
-      await sock.sendMessage(jid, { text: `Perfecto, anotado! 🙌 Si llegás a necesitar cambiar algo avisame, estamos acá 😊` });
+      await sock.sendMessage(jid, { text: `Perfecto, quedo a disposicion por cualquier consulta.` });
     }
     clearConv(jid);
     return;
@@ -234,7 +241,7 @@ async function handleMessage(sock, msg) {
 
   // ── CANCELACIÓN ─────────────────────────────────────────────────────────────
   if (matchesAny(body, cfg.KEYWORDS.cancelar)) {
-    await sock.sendMessage(jid, { text: `No hay problema, tranquila/o 🙏 Cuando quieras reagendar mandame un mensaje y te ubico enseguida.\n\n¡Hasta la próxima! 😊` });
+    await sock.sendMessage(jid, { text: `No hay problema${nombre ? ' ' + nombre : ''}, cuando puedas coordinar avisame y te busco un turno.` });
     await notificarEquipo(sock, `⚠️ *Cancelación*\n👤 ${paciente?.nombre || '+' + num}\nMensaje: "${body}"`);
     clearConv(jid);
     return;
@@ -242,11 +249,11 @@ async function handleMessage(sock, msg) {
 
   // ── HORARIO / UBICACIÓN ──────────────────────────────────────────────────────
   if (matchesAny(body, cfg.KEYWORDS.horario)) {
-    await sock.sendMessage(jid, { text: `Atendemos *lunes a viernes de 15 a 21hs* y *sábados de 9 a 15hs* 🗓️\n\nEstamos en *${cfg.CLINICA.direccion}*.\n\n¿Querés que te agendemos un turno? 😊` });
+    await sock.sendMessage(jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en el ${cfg.CLINICA.direccion}. ¿Te gustaría que coordinemos un turnito?` });
     return;
   }
   if (matchesAny(body, cfg.KEYWORDS.ubicacion)) {
-    await sock.sendMessage(jid, { text: `Estamos en el *Pase de Compras de Ayres Village Open Mall*, acá en San Juan 📍\n\nGoogle Maps: https://maps.app.goo.gl/AyresVillageSanJuan\n\n⏰ Lunes a viernes 15 a 21hs · Sábados 9 a 15hs.\n\n¿Te agendo un turno? 😊` });
+    await sock.sendMessage(jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan. Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs. ¿Te gustaría que coordinemos un turnito?` });
     return;
   }
 
@@ -260,7 +267,7 @@ async function handleMessage(sock, msg) {
     const desc = esConsulta ? `Consulta con Dra. Sabrina Quiroga` : tratamiento;
 
     await sock.sendMessage(jid, {
-      text: `Perfecto! 🙌 Anotamos tu solicitud para *${desc}*.\n\nNuestras chicas te van a confirmar el turno a la brevedad y te van a pasar el link de pago para asegurar el turno 💳\n\n${monto > 0 ? `_El monto a abonar es ${fmtPeso(monto)}${esConsulta ? ' (se descuenta del tratamiento si lo realizás)' : ' (seña del 20%)'}._\n\n` : ''}¡Hasta pronto! 🌸`,
+      text: `Perfecto, anotamos tu solicitud para ${desc}. Te confirmo el turno a la brevedad y te paso el link de pago para asegurar el lugar.${monto > 0 ? ' El monto a reservar es ' + fmtPeso(monto) + (esConsulta ? ' (se descuenta cuando realizás el tratamiento)' : ' (seña del 20%).') : ''} Quedo a disposicion.`,
     });
     await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 Tratamiento: ${desc}\n🗓️ Preferencia horaria: "${body}"\n${monto > 0 ? `💰 Seña a cobrar: ${fmtPeso(monto)}\n` : ''}⚡ Confirmar y enviar link Naranja X`);
     clearConv(jid);
@@ -275,12 +282,12 @@ async function handleMessage(sock, msg) {
 
     if (esAltoValor(tratamiento)) {
       await sock.sendMessage(jid, {
-        text: `Genial, gracias por contarme! 😊\n\nPara ese tratamiento te recomendamos arrancar con una *consulta con la Dra. Sabrina* para que evalúe tu caso y diseñe el protocolo ideal para vos.\n\n💡 El valor de la consulta es de *${fmtPeso(PRECIO_CONSULTA)}* y ese monto se *descuenta del tratamiento* cuando lo realizás.\n\n¿Qué día y horario te quedaría bien para venir? (Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs) 🗓️`,
+        text: `Comprendo. Para ese tratamiento te recomiendo arrancar con una consulta con la Dra. Sabrina para que evalúe tu caso y te arme el protocolo ideal. El valor de la consulta es $40.000 y ese monto se descuenta del tratamiento cuando lo realizás. ¿Qué día y horario te queda bien? Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.`,
       });
       setConv(jid, 'esperando_horario', { previos: body, tipo: 'consulta', precio: PRECIO_CONSULTA });
     } else {
       await sock.sendMessage(jid, {
-        text: `Buenísimo${nombre ? ', ' + nombre : ''}! 😊 ¿Qué día y horario te quedaría bien para tu turno?\n\n⏰ Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs 🗓️`,
+        text: `Perfecto${nombre ? ' ' + nombre : ''}. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
       });
     }
     return;
@@ -294,17 +301,17 @@ async function handleMessage(sock, msg) {
       // Tenemos info del tratamiento — la mandamos
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[trat] });
       await new Promise(r => setTimeout(r, 1200));
-      await sock.sendMessage(jid, { text: `¿Ya te hiciste algún tratamiento similar antes, o sería tu primera vez? 😊` });
+      await sock.sendMessage(jid, { text: `¿Ya te realizaste algún tratamiento similar antes, o sería tu primera vez?` });
       setConv(jid, 'esperando_previos', { tratamiento: trat });
     } else if (trat === 'depilacion') {
       await sock.sendMessage(jid, {
-        text: `Perfecto! 💪 Para depilación definitiva usamos tecnología *Monolith Mediostar*, una de las más avanzadas del mercado.\n\nTenemos precio por zona o combos con descuento. ¿Qué zonas te interesan tratar? (piernas, axilas, bikini, cara, cuerpo completo…) 😊`,
+        text: `Para depilación definitiva trabajamos con tecnología Monolith Mediostar, láser diodo de última generación, apta para todo tipo de vello y fototipos de piel. Contamos con precio por zona y también combos con descuento. ¿Qué zonas te interesaría tratar?`,
       });
       setConv(jid, 'esperando_previos', { tratamiento: 'depilacion' });
     } else {
       // No detectamos tratamiento específico — preguntamos más
       await sock.sendMessage(jid, {
-        text: `¡Qué bueno! 😊 Para orientarte mejor, ¿podés contarme un poco más qué es lo que te gustaría mejorar o tratar? Por ejemplo: manchas, arrugas, flacidez, depilación, caída del cabello… así te cuento exactamente qué opción te vendría mejor 🌸`,
+        text: `Para orientarte mejor, ¿podés contarme qué es lo que te gustaría mejorar o tratar? Así te comento qué opciones tenemos para tu caso.`,
       });
       setConv(jid, 'esperando_previos', { tratamiento: body.slice(0, 50) });
     }
@@ -318,11 +325,11 @@ async function handleMessage(sock, msg) {
 
     if (esPrimera) {
       await sock.sendMessage(jid, {
-        text: `¡Genial, bienvenida/o a *ONE DEPIL*! 🌸\n\nSomos una clínica médico-estética especializada, con la Dra. Sabrina Quiroga y todo un equipo de profesionales.\n\n¿Tenés algún tratamiento en mente o querés que te cuente qué opciones tenemos? 😊`,
+        text: `Bienvenida/o a One Depil. Somos una clínica médico-estética, trabajamos con la Dra. Sabrina Quiroga y un equipo de profesionales. ¿Tenés algún tratamiento en mente o querés que te cuente las opciones?`,
       });
     } else {
       await sock.sendMessage(jid, {
-        text: `Qué bueno verte de nuevo${nombre ? ', ' + nombre : ''}! 😊\n\n¿Qué tratamiento te interesaría esta vez? 🌸`,
+        text: `Hola${nombre ? ' ' + nombre : ''}, qué bueno que nos escribís. ¿En qué te podemos ayudar?`,
       });
     }
     return;
@@ -340,11 +347,11 @@ async function handleMessage(sock, msg) {
     if (INFO_TRATAMIENTOS[tratamientoDirecto]) {
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[tratamientoDirecto] });
       await new Promise(r => setTimeout(r, 1200));
-      await sock.sendMessage(jid, { text: `¿Ya te hiciste algún tratamiento similar antes, o sería tu primera vez? 😊` });
+      await sock.sendMessage(jid, { text: `¿Ya te realizaste algún tratamiento similar antes, o sería tu primera vez?` });
       setConv(jid, 'esperando_previos', { tratamiento: tratamientoDirecto });
     } else if (tratamientoDirecto === 'depilacion') {
       await sock.sendMessage(jid, {
-        text: `Para depilación definitiva usamos tecnología *Monolith Mediostar* 💪 ¿Qué zonas te interesan? (piernas, axilas, bikini, cara, cuerpo completo…) 😊`,
+        text: `Para depilación definitiva trabajamos con tecnología Monolith Mediostar, láser diodo de última generación. ¿Qué zonas te interesan tratar?`,
       });
       setConv(jid, 'esperando_previos', { tratamiento: 'depilacion' });
     }
@@ -353,7 +360,7 @@ async function handleMessage(sock, msg) {
 
   if (quiereTurno) {
     await sock.sendMessage(jid, {
-      text: `Claro${nombre ? ', ' + nombre : ''}! 😊 Para agendarte bien, ¿qué tratamiento o consulta querés hacer? 🌸`,
+      text: `${saludoHora()}${nombre ? ' ' + nombre : ''}. ¿Qué tratamiento o consulta querés hacer?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -361,7 +368,7 @@ async function handleMessage(sock, msg) {
 
   if (quierePrecios) {
     await sock.sendMessage(jid, {
-      text: `Los valores varían según el tratamiento y la zona 😊 Lo mejor es que te cuente según lo que necesitás.\n\n¿Qué tratamiento te interesa? Así te doy información personalizada 🌸`,
+      text: `Los valores dependen del tratamiento y la zona a tratar. ¿Sobre qué tratamiento querés consultar?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -369,7 +376,7 @@ async function handleMessage(sock, msg) {
 
   if (quiereServicios) {
     await sock.sendMessage(jid, {
-      text: `En *ONE DEPIL* hacemos un montón de cosas! 💆‍♀️✨\n\n🪒 Depilación definitiva — Monolith Mediostar\n💉 Botox, rellenos y Baby Botox\n⚡ Endolift facial y corporal\n🔬 Endymed (Intensif + FSR)\n👁️ EndyEyes\n🌊 HIFU facial y corporal\n❄️ Criolipolisis y Ultracavitación\n💊 Mesoterapia y PRP\n✨ Limpiezas faciales y Peeling\n🧪 Alquimia\n💧 Suero terapias\n⚖️ Descenso de peso — Dra. Otiñano\n🩺 Ginecología — Dr. Echegaray\n\n¿Hay alguno que te llame la atención para contarte más? 😊`,
+      text: `En One Depil realizamos: depilación definitiva (Monolith Mediostar), Botox y Baby Botox, Endolift facial y corporal, Endymed Intensif + FSR, EndyEyes, HIFU, Criolipolisis, Ultracavitación, Mesoterapia, PRP, Limpiezas faciales, Peeling, Alquimia, Suero terapias, Descenso de peso y Ginecología. ¿Hay alguno en particular sobre el que quieras información?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -393,13 +400,13 @@ async function handleMessage(sock, msg) {
       await notificarEquipo(sock, `👤 *Paciente reconocida/o*\n*${encontrado.nombre}* (+${num})\n📱 Tel registrado: ${encontrado.tel || '-'}${ventas}\n🔔 Está consultando por WhatsApp`);
 
       await sock.sendMessage(jid, {
-        text: `Hola ${primerNombre}! Qué bueno saber de vos 😊\n\n${tratamientosPrevios ? `Vi que ya estuviste con nosotros — ` : `Ya te tenemos en nuestro sistema 🌸 — `}¿hoy venís por algo nuevo o querés continuar algún tratamiento?`,
+        text: `${saludoHora()} ${primerNombre}, te habla Aldana de One Depil.${tratamientosPrevios ? ' Vi que ya estuviste con nosotros.' : ''} ¿En qué te puedo ayudar?`,
       });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado, previos: tratamientosPrevios });
     } else {
       // Paciente nuevo
       await sock.sendMessage(jid, {
-        text: `Gracias${nombreIngresado ? ', *' + nombreIngresado + '*' : ''}! 😊 ¡Bienvenida/o a *ONE DEPIL*!\n\nSomos una clínica médico-estética especializada, con la Dra. Sabrina Quiroga y todo un equipo de profesionales.\n\n¿Tenés algún tratamiento en mente o querés que te cuente qué opciones tenemos? 🌸`,
+        text: `${saludoHora()}${nombreIngresado ? ' ' + nombreIngresado : ''}, te habla Aldana de One Depil. Bienvenida/o. ¿Sobre qué tratamiento querés consultar?`,
       });
       setConv(jid, 'esperando_tratamiento', { nombreIngresado });
     }
@@ -411,12 +418,12 @@ async function handleMessage(sock, msg) {
     if (paciente) {
       const primerNombre = paciente.nombre.split(' ')[0];
       await sock.sendMessage(jid, {
-        text: `Hola ${primerNombre}! 😊 Soy Aldana, de *ONE DEPIL*. ¿En qué te puedo ayudar hoy? 🌸`,
+        text: `${saludoHora()} ${primerNombre}, te habla Aldana de One Depil. ¿En qué te puedo ayudar?`,
       });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: paciente });
     } else {
       await sock.sendMessage(jid, {
-        text: `Hola! 😊 Soy Aldana, de *ONE DEPIL*.\n\nAntes que nada, ¿me decís tu nombre y apellido para buscarte en nuestro sistema? 🌸`,
+        text: `${saludoHora()}, te habla Aldana de One Depil. ¿Me decís tu nombre y apellido para buscarte en nuestro sistema?`,
       });
       setConv(jid, 'esperando_identificacion');
     }
