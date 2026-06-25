@@ -174,6 +174,8 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
   <button class="nav-btn" onclick="goTab('caja')">💰 Caja</button>
   <button class="nav-btn" onclick="goTab('stock')">📦 Stock</button>
   <button class="nav-btn" onclick="goTab('reportes')">📊 Reportes</button>
+  <button class="nav-btn" onclick="goTab('agente')">🤖 Agente</button>
+  <button class="nav-btn" onclick="goTab('paquetes')">🎁 Paquetes</button>
   <button class="nav-btn" onclick="goTab('herramientas')">🛠️ Herramientas</button>
   <button class="nav-btn" onclick="goTab('config')">⚙️ Config</button>
 </div>
@@ -308,6 +310,129 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
   <div class="card">
     <div class="card-title">Desglose por Profesional</div>
     <div id="rep-profs"></div>
+  </div>
+</div>
+
+<!-- ===== AGENTE ===== -->
+<div id="tab-agente" class="tab-panel">
+  <div class="sec-header">
+    <h2>🤖 Agente de Reportes</h2>
+    <button class="btn btn-gold" onclick="generarBriefing()">▶ Generar Briefing</button>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <!-- BRIEFING DIARIO -->
+      <div class="card">
+        <div class="card-title">📋 Briefing Matutino — <span id="ag-fecha-label"></span></div>
+        <div id="ag-briefing-preview" style="font-size:12px;color:var(--text2);padding:10px 0">Hacé click en "Generar Briefing" para crear el resumen del día.</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="copiarBriefing()">📋 Copiar</button>
+          <button class="btn btn-wa btn-sm" onclick="enviarBriefingWA()">Enviar al grupo WA</button>
+        </div>
+      </div>
+
+      <!-- CIERRE DE DÍA -->
+      <div class="card">
+        <div class="card-title">🌙 Cierre del Día</div>
+        <div id="ag-cierre-preview" style="font-size:12px;color:var(--text2);padding:10px 0">Resumen automático de ingresos, turnos atendidos y deudas del día.</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-gold btn-sm" onclick="generarCierre()">▶ Generar Cierre</button>
+          <button class="btn btn-ghost btn-sm" onclick="copiarCierre()">📋 Copiar</button>
+          <button class="btn btn-wa btn-sm" onclick="enviarCierreWA()">Enviar por WA</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- ALERTAS AUTOMÁTICAS -->
+      <div class="card">
+        <div class="card-title">⚡ Alertas Activas</div>
+        <div id="ag-alertas"></div>
+      </div>
+
+      <!-- REPORTE SEMANAL -->
+      <div class="card">
+        <div class="card-title">📊 Reporte Semanal</div>
+        <div id="ag-semanal"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-gold btn-sm" onclick="generarSemanal()">▶ Generar</button>
+          <button class="btn btn-ghost btn-sm" onclick="copiarSemanal()">📋 Copiar</button>
+        </div>
+      </div>
+
+      <!-- AUTOMATIZACIÓN -->
+      <div class="card">
+        <div class="card-title">⏰ Automatización</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">El agente puede enviar recordatorios automáticos cuando abrís la app cada día.</p>
+        <div class="form-group">
+          <label>Activar recordatorios automáticos al abrir la app</label>
+          <select id="ag-auto-rec">
+            <option value="0">Desactivado</option>
+            <option value="1">Sí — recordar turnos de mañana</option>
+            <option value="2">Sí — recordar turnos de hoy y mañana</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Número del grupo WhatsApp de la clínica (para briefing)</label>
+          <input type="text" id="ag-grupo-wa" placeholder="549264…" value=""/>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="saveAgConfig()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAQUETES ===== -->
+<div id="tab-paquetes" class="tab-panel">
+  <div class="sec-header">
+    <h2>🎁 Paquetes y Promociones</h2>
+    <button class="btn btn-gold" onclick="openModalPaquete()">+ Nuevo Paquete</button>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Paquetes Activos</div>
+    <div id="paquetes-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💳 Vender Paquete a Paciente</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Paciente</label>
+        <select id="vp-pac">
+          <option value="">— seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Paquete</label>
+        <select id="vp-paq" onchange="vpAutoFill()">
+          <option value="">— seleccionar —</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Precio de venta ($)</label>
+        <input type="number" id="vp-precio" placeholder="0"/>
+      </div>
+      <div class="form-group">
+        <label>Forma de pago</label>
+        <select id="vp-metodo">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="tarjeta">Tarjeta</option>
+          <option value="naranjax">Naranja X</option>
+          <option value="cuotas">Plan de cuotas</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="venderPaquete()">Registrar Venta de Paquete</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Paquetes Vendidos</div>
+    <div id="paquetes-vendidos-list"></div>
   </div>
 </div>
 
@@ -616,6 +741,8 @@ function renderTab(t){
   else if(t==='caja')renderCaja();
   else if(t==='stock')renderStock();
   else if(t==='reportes')renderReportes();
+  else if(t==='agente')renderAgente();
+  else if(t==='paquetes')renderPaquetes();
   else if(t==='herramientas')renderHerramientas();
   else if(t==='config')renderConfig();
 }
@@ -1272,6 +1399,299 @@ function resetDatos(){
   STATE={profs:DEFAULT_PROFS,servicios:DEFAULT_SERVICIOS,gastos:DEFAULT_GASTOS,turnos:[],pacientes:[],cobros:[],stock:DEFAULT_STOCK,config:STATE.config};
   save();renderTab(currentTab);toast('Datos reseteados');
 }
+
+// ========== AGENTE ==========
+let _briefingText='';
+let _cierreText='';
+let _semanalText='';
+
+STATE.agConfig = STATE.agConfig || ls('od_agconfig', {autoRec:'0', grupoWA:''});
+STATE.paquetes = STATE.paquetes || ls('od_paquetes', [
+  {id:'pk1', nombre:'Pack Depilación x6 Zonas Pequeñas', sesiones:6, precio:140000, servicios:['s1'], activo:true},
+  {id:'pk2', nombre:'Pack Depilación x6 Zonas Medianas', sesiones:6, precio:270000, servicios:['s1b'], activo:true},
+  {id:'pk3', nombre:'Pack Mesoterapia Facial x4', sesiones:4, precio:220000, servicios:['s9'], activo:true},
+  {id:'pk4', nombre:'Pack Endimed Corporal x8', sesiones:8, precio:420000, servicios:['s8'], activo:true},
+  {id:'pk5', nombre:'Pack PRP x3', sesiones:3, precio:450000, servicios:['s12'], activo:true},
+]);
+STATE.ventasPaquetes = STATE.ventasPaquetes || ls('od_ventas_paq', []);
+
+function saveAll(){
+  save();
+  lsSet('od_watpls',STATE.waTpls||[]);
+  lsSet('od_sucursales',STATE.sucursales||[]);
+  lsSet('od_agconfig',STATE.agConfig||{});
+  lsSet('od_paquetes',STATE.paquetes||[]);
+  lsSet('od_ventas_paq',STATE.ventasPaquetes||[]);
+}
+
+function renderAgente(){
+  const hoy=today();
+  document.getElementById('ag-fecha-label').textContent=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+
+  // Alertas
+  const alertas=[];
+  const stockBajo=STATE.stock.filter(s=>s.stock<=s.minimo);
+  if(stockBajo.length) alertas.push({tipo:'red',msg:`⚠️ ${stockBajo.length} item(s) de stock bajo mínimo: ${stockBajo.map(s=>s.nombre).join(', ')}`});
+  const deudasPend=STATE.cobros.filter(c=>c.estado!=='pagado'&&(c.saldo||0)>0);
+  if(deudasPend.length){
+    const totalDeuda=deudasPend.reduce((a,c)=>a+(c.saldo||0),0);
+    alertas.push({tipo:'gold',msg:`💰 ${deudasPend.length} deuda(s) pendiente(s): ${fmtPeso(totalDeuda)} total`});
+  }
+  const turnosHoySinConfirmar=STATE.turnos.filter(t=>t.fecha===hoy&&t.estado==='pendiente');
+  if(turnosHoySinConfirmar.length) alertas.push({tipo:'blue',msg:`📅 ${turnosHoySinConfirmar.length} turno(s) de hoy sin confirmar`});
+  const mañana=new Date();mañana.setDate(mañana.getDate()+1);
+  const turnosMañana=STATE.turnos.filter(t=>t.fecha===mañana.toISOString().slice(0,10)&&t.estado!=='cancelado');
+  if(turnosMañana.length) alertas.push({tipo:'green',msg:`✅ ${turnosMañana.length} turno(s) mañana — recordatorios pendientes de enviar`});
+
+  document.getElementById('ag-alertas').innerHTML = alertas.length===0
+    ? '<div style="color:var(--green);padding:8px">✓ Sin alertas activas</div>'
+    : alertas.map(a=>`<div class="cobro-row" style="border-left:3px solid var(--${a.tipo});padding-left:10px;margin-bottom:8px;font-size:13px">${a.msg}</div>`).join('');
+
+  // Reporte semanal preview
+  const semana=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);semana.push(d.toISOString().slice(0,10));}
+  const ingresosSemana=STATE.cobros.filter(c=>semana.includes(c.fecha)).reduce((a,c)=>a+(c.monto||0),0);
+  const turnosSemana=STATE.turnos.filter(t=>semana.includes(t.fecha)&&t.estado==='atendido').length;
+  document.getElementById('ag-semanal').innerHTML=`
+    <div class="rep-row"><span>Ingresos últimos 7 días</span><span style="color:var(--green)">${fmtPeso(ingresosSemana)}</span></div>
+    <div class="rep-row"><span>Turnos atendidos</span><span>${turnosSemana}</span></div>
+    <div class="rep-row"><span>Ticket promedio</span><span>${turnosSemana>0?fmtPeso(Math.round(ingresosSemana/turnosSemana)):'—'}</span></div>
+  `;
+
+  // Autoconfig
+  if(STATE.agConfig){
+    document.getElementById('ag-auto-rec').value=STATE.agConfig.autoRec||'0';
+    document.getElementById('ag-grupo-wa').value=STATE.agConfig.grupoWA||'';
+  }
+
+  // Auto-recordatorio al abrir
+  if(STATE.agConfig?.autoRec!=='0' && !ls('od_rec_sent_'+hoy, false)){
+    lsSet('od_rec_sent_'+hoy, true);
+    setTimeout(()=>{
+      const mañana2=new Date();mañana2.setDate(mañana2.getDate()+1);
+      const fecha2=mañana2.toISOString().slice(0,10);
+      const pendientes=STATE.turnos.filter(t=>t.fecha===fecha2&&t.estado!=='cancelado');
+      if(pendientes.length) toast(`🤖 Agente: ${pendientes.length} turno(s) para mañana. Ir a Herramientas → Recordatorios.`);
+    }, 1500);
+  }
+}
+
+function generarBriefing(){
+  const hoy=today();
+  const turnos=STATE.turnos.filter(t=>t.fecha===hoy&&t.estado!=='cancelado').sort((a,b)=>a.hora.localeCompare(b.hora));
+  const porProf={};
+  turnos.forEach(t=>{const p=profById(t.profId).nombre;if(!porProf[p])porProf[p]=[];porProf[p].push(t);});
+
+  const fechaFmt=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let txt=`🌸 *ONE DEPIL — Briefing ${fechaFmt}*\n📍 Ayres Village Open Mall\n\n`;
+
+  if(turnos.length===0){
+    txt+='Sin turnos agendados para hoy.\n';
+  } else {
+    txt+=`📅 *${turnos.length} turno(s) del día*\n\n`;
+    Object.entries(porProf).forEach(([prof,ts])=>{
+      txt+=`👤 *${prof}*\n`;
+      ts.forEach(t=>{
+        const svc=svcById(t.svcId);
+        txt+=`  • ${t.hora}hs — ${t.paciente} — ${svc.nombre}\n`;
+      });
+      txt+='\n';
+    });
+  }
+
+  const stockBajo=STATE.stock.filter(s=>s.stock<=s.minimo);
+  if(stockBajo.length) txt+=`⚠️ *Stock bajo:* ${stockBajo.map(s=>s.nombre+' ('+s.stock+' '+s.unidad+')').join(', ')}\n\n`;
+  txt+=`✨ ¡Buen día a todo el equipo!`;
+
+  _briefingText=txt;
+  document.getElementById('ag-briefing-preview').innerHTML='<pre style="white-space:pre-wrap;font-size:12px;line-height:1.6;color:var(--text)">'+txt+'</pre>';
+  toast('Briefing generado ✓');
+}
+
+function generarCierre(){
+  const hoy=today();
+  const cobrosHoy=STATE.cobros.filter(c=>c.fecha===hoy);
+  const total=cobrosHoy.reduce((a,c)=>a+(c.monto||0),0);
+  const atendidos=STATE.turnos.filter(t=>t.fecha===hoy&&t.estado==='atendido').length;
+  const cancelados=STATE.turnos.filter(t=>t.fecha===hoy&&t.estado==='cancelado').length;
+  const deudas=cobrosHoy.filter(c=>c.estado!=='pagado');
+  const totalDeuda=deudas.reduce((a,c)=>a+(c.saldo||0),0);
+
+  const metodos={efectivo:0,transferencia:0,tarjeta:0,naranjax:0};
+  cobrosHoy.forEach(c=>{if(metodos[c.metodo]!==undefined)metodos[c.metodo]+=(c.monto||0);});
+
+  const fechaFmt=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  let txt=`🌙 *ONE DEPIL — Cierre ${fechaFmt}*\n\n`;
+  txt+=`📊 *Resumen del día*\n`;
+  txt+=`• Turnos atendidos: ${atendidos}\n`;
+  if(cancelados) txt+=`• Cancelados: ${cancelados}\n`;
+  txt+=`\n💰 *Ingresos: ${fmtPeso(total)}*\n`;
+  if(metodos.efectivo) txt+=`  • Efectivo: ${fmtPeso(metodos.efectivo)}\n`;
+  if(metodos.transferencia) txt+=`  • Transferencia: ${fmtPeso(metodos.transferencia)}\n`;
+  if(metodos.tarjeta) txt+=`  • Tarjeta: ${fmtPeso(metodos.tarjeta)}\n`;
+  if(metodos.naranjax) txt+=`  • Naranja X: ${fmtPeso(metodos.naranjax)}\n`;
+  if(totalDeuda>0) txt+=`\n⚠️ Deudas del día: ${fmtPeso(totalDeuda)}\n`;
+  txt+=`\n¡Gracias equipo, hasta mañana! 🌸`;
+
+  _cierreText=txt;
+  document.getElementById('ag-cierre-preview').innerHTML='<pre style="white-space:pre-wrap;font-size:12px;line-height:1.6;color:var(--text)">'+txt+'</pre>';
+  toast('Cierre generado ✓');
+}
+
+function generarSemanal(){
+  const semana=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);semana.push(d.toISOString().slice(0,10));}
+  const cobros=STATE.cobros.filter(c=>semana.includes(c.fecha));
+  const total=cobros.reduce((a,c)=>a+(c.monto||0),0);
+  const atendidos=STATE.turnos.filter(t=>semana.includes(t.fecha)&&t.estado==='atendido').length;
+
+  const porSvc={};
+  cobros.forEach(c=>{if(!porSvc[c.servicio||'Otros'])porSvc[c.servicio||'Otros']=0;porSvc[c.servicio||'Otros']+=(c.monto||0);});
+  const topSvc=Object.entries(porSvc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const desde=new Date(semana[0]).toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+  const hasta=new Date(semana[6]).toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+
+  let txt=`📊 *ONE DEPIL — Reporte Semanal*\n📅 ${desde} al ${hasta}\n\n`;
+  txt+=`💰 *Ingresos totales: ${fmtPeso(total)}*\n`;
+  txt+=`👤 Turnos atendidos: ${atendidos}\n`;
+  txt+=`💵 Ticket promedio: ${atendidos>0?fmtPeso(Math.round(total/atendidos)):'—'}\n\n`;
+  txt+=`🏆 *Top servicios de la semana:*\n`;
+  topSvc.forEach(([svc,monto])=>{txt+=`  • ${svc}: ${fmtPeso(monto)}\n`;});
+  txt+=`\nONE DEPIL · Ayres Village Open Mall ✨`;
+
+  _semanalText=txt;
+  document.getElementById('ag-semanal').innerHTML='<pre style="white-space:pre-wrap;font-size:11px;line-height:1.5;color:var(--text)">'+txt+'</pre>';
+  toast('Reporte semanal generado ✓');
+}
+
+function copiarBriefing(){if(!_briefingText)return toast('Primero generá el briefing');navigator.clipboard.writeText(_briefingText).then(()=>toast('Copiado ✓')).catch(()=>toast('Usá Ctrl+C en el texto'));}
+function copiarCierre(){if(!_cierreText)return toast('Primero generá el cierre');navigator.clipboard.writeText(_cierreText).then(()=>toast('Copiado ✓')).catch(()=>toast('Usá Ctrl+C en el texto'));}
+function copiarSemanal(){if(!_semanalText)return toast('Primero generá el reporte');navigator.clipboard.writeText(_semanalText).then(()=>toast('Copiado ✓')).catch(()=>toast('Usá Ctrl+C en el texto'));}
+
+function enviarBriefingWA(){
+  if(!_briefingText){generarBriefing();}
+  const waNum=STATE.agConfig?.grupoWA||STATE.config?.wa||'';
+  const num=waNum.replace(/\D/g,'');
+  const url=num?`https://wa.me/${num}?text=${encodeURIComponent(_briefingText)}`:`https://wa.me/?text=${encodeURIComponent(_briefingText)}`;
+  window.open(url,'_blank');
+}
+function enviarCierreWA(){
+  if(!_cierreText){generarCierre();}
+  const waNum=STATE.agConfig?.grupoWA||STATE.config?.wa||'';
+  const num=waNum.replace(/\D/g,'');
+  const url=num?`https://wa.me/${num}?text=${encodeURIComponent(_cierreText)}`:`https://wa.me/?text=${encodeURIComponent(_cierreText)}`;
+  window.open(url,'_blank');
+}
+
+function saveAgConfig(){
+  STATE.agConfig={
+    autoRec:document.getElementById('ag-auto-rec').value,
+    grupoWA:document.getElementById('ag-grupo-wa').value.trim(),
+  };
+  saveAll();toast('Configuración del agente guardada ✓');
+}
+
+// ========== PAQUETES ==========
+function renderPaquetes(){
+  // Populate selects
+  const pacSel=document.getElementById('vp-pac');
+  if(pacSel)pacSel.innerHTML='<option value="">— seleccionar —</option>'+STATE.pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  const paqSel=document.getElementById('vp-paq');
+  if(paqSel)paqSel.innerHTML='<option value="">— seleccionar —</option>'+STATE.paquetes.filter(p=>p.activo).map(p=>`<option value="${p.id}">${p.nombre} — ${fmtPeso(p.precio)}</option>`).join('');
+
+  document.getElementById('paquetes-list').innerHTML = STATE.paquetes.length===0
+    ? '<div style="color:var(--text2);padding:12px">Sin paquetes configurados</div>'
+    : STATE.paquetes.map(p=>{
+        const vendidos=STATE.ventasPaquetes.filter(v=>v.paqId===p.id).length;
+        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600">${p.nombre}</div>
+            <div style="font-size:11px;color:var(--text2)">${p.sesiones} sesiones · ${fmtPeso(p.precio)} · <span style="color:var(--gold)">${vendidos} vendido${vendidos!==1?'s':''}</span></div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="togglePaquete('${p.id}')">${p.activo?'Pausar':'Activar'}</button>
+            <button class="btn btn-red btn-sm" onclick="delPaquete('${p.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+
+  const ventas=[...STATE.ventasPaquetes].sort((a,b)=>b.id.localeCompare(a.id)).slice(0,20);
+  document.getElementById('paquetes-vendidos-list').innerHTML = ventas.length===0
+    ? '<div style="color:var(--text2);padding:12px">Sin ventas registradas</div>'
+    : ventas.map(v=>{
+        const paq=STATE.paquetes.find(p=>p.id===v.paqId)||{nombre:'—'};
+        const pac=STATE.pacientes.find(p=>p.id===v.pacId)||{nombre:v.pacNombre||'—'};
+        const sesUsadas=v.sesUsadas||0;
+        const sesTotales=paq.sesiones||1;
+        const pct=Math.round((sesUsadas/sesTotales)*100);
+        return`<div class="cobro-row">
+          <div style="flex:1">
+            <div style="font-weight:600">${pac.nombre}</div>
+            <div style="font-size:11px;color:var(--text2)">${paq.nombre} · ${fmtFecha(v.fecha)} · ${v.metodo||''}</div>
+            <div class="progress-bar-bg" style="margin-top:4px"><div class="progress-bar-fill" style="width:${pct}%;background:var(--gold)"></div></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${sesUsadas}/${sesTotales} sesiones usadas</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:12px">
+            <div style="font-weight:700;color:var(--gold)">${fmtPeso(v.precio)}</div>
+            <button class="btn btn-green btn-sm" style="margin-top:4px" onclick="usarSesion('${v.id}')">+ Sesión</button>
+          </div>
+        </div>`;
+      }).join('');
+}
+
+function vpAutoFill(){
+  const paqId=document.getElementById('vp-paq')?.value;
+  const paq=STATE.paquetes.find(p=>p.id===paqId);
+  if(paq){const pr=document.getElementById('vp-precio');if(pr)pr.value=paq.precio;}
+}
+
+function venderPaquete(){
+  const pacId=document.getElementById('vp-pac')?.value;
+  const paqId=document.getElementById('vp-paq')?.value;
+  const precio=parseInt(document.getElementById('vp-precio')?.value)||0;
+  const metodo=document.getElementById('vp-metodo')?.value||'efectivo';
+  if(!pacId||!paqId)return toast('Seleccioná paciente y paquete');
+  const pac=STATE.pacientes.find(p=>p.id===pacId);
+  const paq=STATE.paquetes.find(p=>p.id===paqId);
+  const vId=uid();
+  STATE.ventasPaquetes.push({id:vId,pacId,pacNombre:pac.nombre,paqId,precio,metodo,fecha:today(),sesUsadas:0});
+  STATE.cobros.push({id:uid(),paciente:pac.nombre,pacienteId:pacId,servicio:'Paquete: '+paq.nombre,profNombre:'',monto:precio,total:precio,saldo:0,metodo,estado:'pagado',fecha:today()});
+  saveAll();renderPaquetes();renderCaja();toast('Paquete vendido ✓ — '+paq.nombre);
+}
+
+function usarSesion(vId){
+  const v=STATE.ventasPaquetes.find(x=>x.id===vId);if(!v)return;
+  const paq=STATE.paquetes.find(p=>p.id===v.paqId);
+  if(v.sesUsadas>=(paq?.sesiones||999))return toast('Paquete agotado');
+  v.sesUsadas=(v.sesUsadas||0)+1;
+  saveAll();renderPaquetes();
+  toast(`Sesión registrada (${v.sesUsadas}/${paq?.sesiones||'?'})`);
+}
+
+function openModalPaquete(){
+  openModal('Nuevo Paquete',`
+    <div class="form-group"><label>Nombre del paquete</label><input type="text" id="mpq-nombre" placeholder="Pack Depilación x6 Zona Grande"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Sesiones incluidas</label><input type="number" id="mpq-ses" value="6"/></div>
+      <div class="form-group"><label>Precio ($)</label><input type="number" id="mpq-precio" placeholder="0"/></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-gold" onclick="savePaquete()">Crear Paquete</button>
+    </div>
+  `);
+}
+function savePaquete(){
+  const n=document.getElementById('mpq-nombre')?.value.trim();
+  const ses=parseInt(document.getElementById('mpq-ses')?.value)||1;
+  const precio=parseInt(document.getElementById('mpq-precio')?.value)||0;
+  if(!n)return toast('Ingresá el nombre');
+  STATE.paquetes.push({id:uid(),nombre:n,sesiones:ses,precio,servicios:[],activo:true});
+  saveAll();closeModal();renderPaquetes();toast('Paquete creado ✓');
+}
+function delPaquete(id){STATE.paquetes=STATE.paquetes.filter(p=>p.id!==id);saveAll();renderPaquetes();}
+function togglePaquete(id){const p=STATE.paquetes.find(x=>x.id===id);if(p){p.activo=!p.activo;saveAll();renderPaquetes();}}
 
 // ========== HERRAMIENTAS — STATE ==========
 STATE.waTpls = STATE.waTpls || ls('od_watpls', [
