@@ -1580,68 +1580,273 @@ function savePaciente(editId){
 function delPaciente(id){STATE.pacientes=STATE.pacientes.filter(p=>p.id!==id);save();closeModal();renderPacientes();}
 
 // ========== HISTORIA CLÍNICA ==========
+const HC_TIPOS = {
+  consulta:     { label:'Consulta médica (Dra. Sabrina)',  color:'var(--gold)' },
+  endymed:      { label:'Endymed Intensif + FSR',          color:'var(--purple)' },
+  mediostar:    { label:'Mediostar (Depilación láser)',    color:'var(--blue)' },
+  criolipolisis:{ label:'Criolipólisis',                  color:'var(--orange)' },
+  encurve:      { label:'enCurve',                        color:'var(--green)' },
+  alquimia:     { label:'Alquimia Treatment',             color:'var(--gold2)' },
+  cmslim:       { label:'CM Slim',                        color:'var(--blue)' },
+  general:      { label:'Nota clínica general',           color:'var(--text2)' },
+};
+
+function hcTipoColor(tipo){ return (HC_TIPOS[tipo]||HC_TIPOS.general).color; }
+function hcTipoLabel(tipo){ return (HC_TIPOS[tipo]||{label:tipo||'General'}).label; }
+
+function gv(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+
 function renderHCList(p) {
   const hc = (p && p.historiaClinica) ? [...p.historiaClinica].sort((a,b)=>b.fecha.localeCompare(a.fecha)) : [];
   if (hc.length === 0) return '<div style="color:var(--text2);font-size:13px;padding:10px 0">Sin entradas clínicas aún.</div>';
   return hc.map(e => {
+    const color = hcTipoColor(e.tipo);
+    const label = hcTipoLabel(e.tipo);
     const puedoEditar = SESSION && (SESSION.rol==='admin' || (SESSION.rol==='medico' && (SESSION.usuario===e.autorUsuario || !e.autorUsuario)));
-    return `<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--purple)">
+    const campos = [];
+    if (e.nroSesion)   campos.push(['Sesión N°', e.nroSesion]);
+    if (e.zona)        campos.push(['Zona', e.zona]);
+    if (e.motivo)      campos.push(['Motivo', e.motivo]);
+    if (e.evaluacion)  campos.push(['Evaluación', e.evaluacion]);
+    if (e.opciones)    campos.push(['Opciones tratamiento', e.opciones]);
+    // Endymed
+    if (e.pulso||e.potencia) campos.push(['Parámetros', [e.pulso&&`Pulso: ${e.pulso}`,e.potencia&&`Potencia: ${e.potencia}`,e.pasadas&&`Pasadas: ${e.pasadas}`,e.profundidad&&`Prof: ${e.profundidad}`].filter(Boolean).join(' · ')]);
+    // Mediostar
+    if (e.spot)        campos.push(['Spot/Energía', `${e.spot?'Spot: '+e.spot:''}${e.energia?' · Energ: '+e.energia:''}${e.speed?' · Speed: '+e.speed:''}${e.modo?' · Modo: '+e.modo:''}`]);
+    // Criolipolisis
+    if (e.temp)        campos.push(['Crío params', `${e.temp?'Temp: '+e.temp:''}${e.tiempo?' · Tiempo: '+e.tiempo:''}${e.vacio?' · Vacío: '+e.vacio:''}`]);
+    // enCurve
+    if (e.tiempo && !e.temp) campos.push(['Tiempo/Control', `${e.tiempo} min${e.control?' · Control: '+e.control:''}`]);
+    // Alquimia
+    if (e.punta)       campos.push(['Alquimia params', `${e.punta?'Punta: '+e.punta:''}${e.vacio_alq?' · Vacío: '+e.vacio_alq:''}${e.emulsion?' · Emulsión: '+e.emulsion:''}`]);
+    // CM Slim
+    if (e.programa)    campos.push(['Programa', `${e.programa}${e.nroSesionCM?' — Sesión '+e.nroSesionCM:''}`]);
+    // General
+    if (e.tratamiento) campos.push(['Tratamiento', e.tratamiento]);
+    if (e.proxima)     campos.push(['Próxima sesión', e.proxima]);
+    if (e.obs)         campos.push(['Observaciones', e.obs]);
+
+    return `<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid ${color}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
         <div>
           <span style="font-weight:700;color:var(--gold)">${fmtFecha(e.fecha)}</span>
-          <span style="font-size:12px;color:var(--purple);margin-left:8px">${e.autorNombre||'—'}</span>
+          <span style="font-size:11px;background:var(--surface);border-radius:4px;padding:2px 7px;margin-left:8px;color:${color}">${label}</span>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${e.autorNombre||'—'}</div>
         </div>
-        ${puedoEditar?`<button class="btn btn-ghost btn-sm" onclick="openModalHC('${p.id}','${e.id}')">Editar</button>`:''}
+        ${puedoEditar?`<button class="btn btn-ghost btn-sm" onclick="openModalHC('${p.id}','${e.id}')">✏️</button>`:''}
       </div>
-      ${e.motivo?`<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--text2);text-transform:uppercase">Motivo</span><div style="font-size:13px">${e.motivo}</div></div>`:''}
-      ${e.evaluacion?`<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--text2);text-transform:uppercase">Evaluación / Diagnóstico</span><div style="font-size:13px">${e.evaluacion}</div></div>`:''}
-      ${e.tratamiento?`<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--text2);text-transform:uppercase">Tratamiento realizado</span><div style="font-size:13px">${e.tratamiento}</div></div>`:''}
-      ${e.proxima?`<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--text2);text-transform:uppercase">Próxima sesión</span><div style="font-size:13px">${e.proxima}</div></div>`:''}
-      ${e.obs?`<div><span style="font-size:11px;color:var(--text2);text-transform:uppercase">Observaciones</span><div style="font-size:13px;color:var(--text2)">${e.obs}</div></div>`:''}
+      ${campos.map(([k,v])=>`<div style="margin-bottom:5px"><span style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">${k}</span><div style="font-size:13px">${v}</div></div>`).join('')}
     </div>`;
   }).join('');
+}
+
+function hcCamposHTML(e) {
+  const tipo = e ? e.tipo : 'consulta';
+  const s = (id, fallback='') => e ? (e[id]||fallback) : fallback;
+  return `
+  <div class="form-group"><label>Tipo de tratamiento / procedimiento</label>
+    <select id="hc-tipo" onchange="hcActualizarCampos()">
+      ${Object.entries(HC_TIPOS).map(([k,v])=>`<option value="${k}" ${tipo===k?'selected':''}>${v.label}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Fecha</label><input type="date" id="hc-fecha" value="${s('fecha',today())}"/></div>
+    <div class="form-group"><label>Profesional</label><input type="text" id="hc-prof" value="${s('autorNombre', SESSION?SESSION.nombre:'')}" placeholder="Nombre"/></div>
+  </div>
+  <div class="form-row" id="hc-row-zona-sesion">
+    <div class="form-group"><label>Zona tratada</label><input type="text" id="hc-zona" value="${s('zona')}" placeholder="Facial / Abdomen / Piernas…"/></div>
+    <div class="form-group" id="hc-grp-sesion"><label>N° Sesión</label><input type="number" id="hc-sesion" min="1" value="${s('nroSesion')}"/></div>
+  </div>
+
+  <!-- CONSULTA MÉDICA -->
+  <div id="hc-bloque-consulta">
+    <div class="form-group"><label>Motivo de consulta</label><textarea id="hc-motivo" rows="2">${s('motivo')}</textarea></div>
+    <div class="form-group"><label>Evaluación / Diagnóstico / Semiología</label><textarea id="hc-eval" rows="3">${s('evaluacion')}</textarea></div>
+    <div class="form-group"><label>Opciones de tratamiento</label><textarea id="hc-opciones" rows="2" placeholder="Opción 1 / Opción 2 / Opción 3">${s('opciones')}</textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Peso (kg)</label><input type="number" id="hc-peso" step="0.1" value="${s('peso')}"/></div>
+      <div class="form-group"><label>Talla (cm)</label><input type="number" id="hc-talla" value="${s('talla')}"/></div>
+      <div class="form-group"><label>IMC</label><input type="number" id="hc-imc" step="0.1" value="${s('imc')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Perímetro cintura (cm)</label><input type="number" id="hc-cintura" step="0.1" value="${s('cintura')}"/></div>
+      <div class="form-group"><label>Perímetro cadera (cm)</label><input type="number" id="hc-cadera" step="0.1" value="${s('cadera')}"/></div>
+    </div>
+  </div>
+
+  <!-- ENDYMED -->
+  <div id="hc-bloque-endymed" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>Pulso</label><input type="text" id="hc-pulso" value="${s('pulso')}" placeholder="ms"/></div>
+      <div class="form-group"><label>Potencia</label><input type="text" id="hc-potencia" value="${s('potencia')}" placeholder="W"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>N° de Pasadas</label><input type="text" id="hc-pasadas" value="${s('pasadas')}"/></div>
+      <div class="form-group"><label>Profundidad</label><input type="text" id="hc-profundidad" value="${s('profundidad')}" placeholder="mm"/></div>
+    </div>
+  </div>
+
+  <!-- MEDIOSTAR -->
+  <div id="hc-bloque-mediostar" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>Fototipo</label><select id="hc-fototipo">
+        <option value="">—</option>
+        ${['I','II','III','IV','V','VI'].map(f=>`<option value="${f}" ${s('fototipo')===f?'selected':''}>${f}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Color de pelo</label><select id="hc-color-pelo">
+        <option value="">—</option>
+        ${['Negro','Castaño','Rubio','Gris','Pelirrojo'].map(c=>`<option value="${c}" ${s('colorPelo')===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tamaño Spot (mm)</label><input type="text" id="hc-spot" value="${s('spot')}"/></div>
+      <div class="form-group"><label>Energ/Ampl (J/cm²)</label><input type="text" id="hc-energia" value="${s('energia')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ancho de Pulso</label><input type="text" id="hc-pulso-width" value="${s('anchosPulso')}"/></div>
+      <div class="form-group"><label>Speed</label><input type="text" id="hc-speed" value="${s('speed')}"/></div>
+      <div class="form-group"><label>Modo</label><input type="text" id="hc-modo" value="${s('modo')}"/></div>
+    </div>
+  </div>
+
+  <!-- CRIOLIPÓLISIS -->
+  <div id="hc-bloque-criolipolisis" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>Temperatura (°C)</label><input type="text" id="hc-temp" value="${s('temp')}"/></div>
+      <div class="form-group"><label>Tiempo (min)</label><input type="text" id="hc-tiempo" value="${s('tiempo')}"/></div>
+      <div class="form-group"><label>Vacío</label><input type="text" id="hc-vacio" value="${s('vacio')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Circunferencia antes (cm)</label><input type="number" step="0.1" id="hc-circ-antes" value="${s('circAntes')}"/></div>
+      <div class="form-group"><label>Circunferencia después (cm)</label><input type="number" step="0.1" id="hc-circ-despues" value="${s('circDespues')}"/></div>
+    </div>
+  </div>
+
+  <!-- ENCURVE -->
+  <div id="hc-bloque-encurve" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>Tiempo (min)</label><input type="text" id="hc-tiempo-ec" value="${s('tiempo')}"/></div>
+      <div class="form-group"><label>Control</label><input type="text" id="hc-control" value="${s('control')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Circunferencia antes (cm)</label><input type="number" step="0.1" id="hc-circ-antes-ec" value="${s('circAntes')}"/></div>
+      <div class="form-group"><label>Circunferencia después (cm)</label><input type="number" step="0.1" id="hc-circ-despues-ec" value="${s('circDespues')}"/></div>
+    </div>
+  </div>
+
+  <!-- ALQUIMIA -->
+  <div id="hc-bloque-alquimia" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>Tipo de piel</label><select id="hc-tipo-piel-alq">
+        <option value="">—</option>
+        ${['Clara','Morena','Negra','Oscura (asiático/latino)','Otro'].map(t=>`<option value="${t}" ${s('tipoPielAlq')===t?'selected':''}>${t}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Punta N°</label><input type="text" id="hc-punta" value="${s('punta')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Vacío</label><input type="text" id="hc-vacio-alq" value="${s('vacio_alq')}"/></div>
+      <div class="form-group"><label>Emulsión</label><input type="text" id="hc-emulsion" value="${s('emulsion')}"/></div>
+    </div>
+  </div>
+
+  <!-- CM SLIM -->
+  <div id="hc-bloque-cmslim" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label>Programa</label><select id="hc-programa">
+        <option value="">—</option>
+        ${['Venus — Construcción Músculo','Afrodita — Quema Grasa','Hércules — Construcción Músculo','David — Quema Grasa'].map(p=>`<option value="${p}" ${s('programa')===p?'selected':''}>${p}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Sesión N°</label><input type="number" id="hc-sesion-cm" min="1" max="8" value="${s('nroSesionCM')}"/></div>
+    </div>
+  </div>
+
+  <!-- GENERAL / TRATAMIENTO -->
+  <div id="hc-bloque-general">
+    <div class="form-group"><label>Tratamiento realizado</label><textarea id="hc-trat" rows="2" placeholder="Procedimiento…">${s('tratamiento')}</textarea></div>
+    <div class="form-group"><label>Próxima sesión</label><input type="text" id="hc-proxima" value="${s('proxima')}" placeholder="En 4 semanas…"/></div>
+  </div>
+
+  <div class="form-group"><label>Observaciones / Reacciones</label><textarea id="hc-obs" rows="2">${s('obs')}</textarea></div>`;
+}
+
+function hcActualizarCampos() {
+  const tipo = document.getElementById('hc-tipo')?.value || 'consulta';
+  const bloques = ['consulta','endymed','mediostar','criolipolisis','encurve','alquimia','cmslim','general'];
+  bloques.forEach(b => {
+    const el = document.getElementById('hc-bloque-'+b);
+    if (el) el.style.display = 'none';
+  });
+  // Siempre mostrar general (notas + próxima) excepto en consulta que tiene sus propios campos
+  const showGeneral = !['consulta'].includes(tipo);
+  const el = document.getElementById('hc-bloque-'+tipo);
+  if (el) el.style.display = '';
+  if (showGeneral) { const g=document.getElementById('hc-bloque-general'); if(g) g.style.display=''; }
+  if (tipo==='consulta') { const g=document.getElementById('hc-bloque-general'); if(g) g.style.display=''; }
+  // Ocultar N° sesión para consulta y general
+  const grpSesion = document.getElementById('hc-grp-sesion');
+  if (grpSesion) grpSesion.style.display = ['consulta','general'].includes(tipo) ? 'none' : '';
 }
 
 function openModalHC(pacId, hcId) {
   const p = STATE.pacientes.find(x=>x.id===pacId);
   if (!p) return;
   const e = hcId ? (p.historiaClinica||[]).find(x=>x.id===hcId) : null;
-  const profNombre = SESSION ? SESSION.nombre : '';
-  openModal(hcId ? 'Editar entrada clínica' : 'Nueva entrada clínica', `
-    <div class="form-row">
-      <div class="form-group"><label>Fecha</label><input type="date" id="hc-fecha" value="${e?e.fecha:today()}"/></div>
-      <div class="form-group"><label>Profesional</label><input type="text" id="hc-prof" value="${e?e.autorNombre:profNombre}" placeholder="Nombre del profesional"/></div>
-    </div>
-    <div class="form-group"><label>Motivo de consulta</label><textarea id="hc-motivo" rows="2" placeholder="¿Por qué consulta el paciente?">${e?e.motivo||'':''}</textarea></div>
-    <div class="form-group"><label>Evaluación / Diagnóstico</label><textarea id="hc-eval" rows="3" placeholder="Hallazgos clínicos, diagnóstico…">${e?e.evaluacion||'':''}</textarea></div>
-    <div class="form-group"><label>Tratamiento realizado</label><textarea id="hc-trat" rows="2" placeholder="Procedimiento, materiales, parámetros…">${e?e.tratamiento||'':''}</textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label>Próxima sesión</label><input type="text" id="hc-proxima" value="${e?e.proxima||'':''}" placeholder="Ej: en 4 semanas, con mantenimiento"/></div>
-    </div>
-    <div class="form-group"><label>Observaciones adicionales</label><textarea id="hc-obs" rows="2" placeholder="Reacciones, indicaciones al paciente…">${e?e.obs||'':''}</textarea></div>
+  openModal(hcId ? 'Editar registro clínico' : 'Nuevo registro clínico', `
+    ${hcCamposHTML(e)}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
       ${hcId?`<button class="btn btn-red btn-sm" onclick="deleteHC('${pacId}','${hcId}')">Eliminar</button>`:''}
       <button class="btn btn-ghost" onclick="closeModal();openModalPaciente('${pacId}')">Cancelar</button>
       <button class="btn btn-gold" onclick="saveHC('${pacId}','${hcId||''}')">Guardar</button>
     </div>
   `);
+  setTimeout(hcActualizarCampos, 50);
 }
 
 function saveHC(pacId, hcId) {
   const p = STATE.pacientes.find(x=>x.id===pacId);
   if (!p) return;
   if (!p.historiaClinica) p.historiaClinica = [];
+  const tipo = gv('hc-tipo') || 'consulta';
   const entry = {
     id: hcId || uid(),
-    fecha: document.getElementById('hc-fecha').value || today(),
-    autorNombre: document.getElementById('hc-prof').value.trim() || (SESSION?SESSION.nombre:''),
+    tipo,
+    fecha:       gv('hc-fecha') || today(),
+    autorNombre: gv('hc-prof') || (SESSION?SESSION.nombre:''),
     autorUsuario: SESSION ? SESSION.usuario : '',
-    motivo: document.getElementById('hc-motivo').value.trim(),
-    evaluacion: document.getElementById('hc-eval').value.trim(),
-    tratamiento: document.getElementById('hc-trat').value.trim(),
-    proxima: document.getElementById('hc-proxima').value.trim(),
-    obs: document.getElementById('hc-obs').value.trim(),
+    zona:        gv('hc-zona'),
+    nroSesion:   gv('hc-sesion'),
+    // consulta
+    motivo:      gv('hc-motivo'),
+    evaluacion:  gv('hc-eval'),
+    opciones:    gv('hc-opciones'),
+    peso: gv('hc-peso'), talla: gv('hc-talla'), imc: gv('hc-imc'),
+    cintura: gv('hc-cintura'), cadera: gv('hc-cadera'),
+    // endymed
+    pulso: gv('hc-pulso'), potencia: gv('hc-potencia'),
+    pasadas: gv('hc-pasadas'), profundidad: gv('hc-profundidad'),
+    // mediostar
+    fototipo: gv('hc-fototipo'), colorPelo: gv('hc-color-pelo'),
+    spot: gv('hc-spot'), energia: gv('hc-energia'),
+    anchoPulso: gv('hc-pulso-width'), speed: gv('hc-speed'), modo: gv('hc-modo'),
+    // criolipolisis
+    temp: gv('hc-temp'), tiempo: gv('hc-tiempo') || gv('hc-tiempo-ec'),
+    vacio: gv('hc-vacio'), circAntes: gv('hc-circ-antes') || gv('hc-circ-antes-ec'),
+    circDespues: gv('hc-circ-despues') || gv('hc-circ-despues-ec'),
+    // encurve
+    control: gv('hc-control'),
+    // alquimia
+    tipoPielAlq: gv('hc-tipo-piel-alq'), punta: gv('hc-punta'),
+    vacio_alq: gv('hc-vacio-alq'), emulsion: gv('hc-emulsion'),
+    // cmslim
+    programa: gv('hc-programa'), nroSesionCM: gv('hc-sesion-cm'),
+    // general
+    tratamiento: gv('hc-trat'), proxima: gv('hc-proxima'),
+    obs: gv('hc-obs'),
   };
+  // Limpiar campos vacíos
+  Object.keys(entry).forEach(k => { if(entry[k]==='') delete entry[k]; });
+  entry.id = hcId || uid();
+  entry.tipo = tipo;
   if (hcId) {
     const i = p.historiaClinica.findIndex(x=>x.id===hcId);
     if (i>=0) p.historiaClinica[i] = entry;
@@ -1649,7 +1854,7 @@ function saveHC(pacId, hcId) {
     p.historiaClinica.push(entry);
   }
   save();
-  toast('Entrada guardada ✓');
+  toast('Registro clínico guardado ✓');
   closeModal();
   openModalPaciente(pacId);
 }
@@ -1659,7 +1864,7 @@ function deleteHC(pacId, hcId) {
   if (!p) return;
   p.historiaClinica = (p.historiaClinica||[]).filter(x=>x.id!==hcId);
   save();
-  toast('Entrada eliminada');
+  toast('Registro eliminado');
   closeModal();
   openModalPaciente(pacId);
 }

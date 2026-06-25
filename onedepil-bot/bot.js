@@ -283,15 +283,9 @@ async function handleMessage(sock, msg) {
     return;
   }
 
-  // ── INICIO DEL FLUJO (saludo o primer mensaje) ───────────────────────────────
-  const esSaludo = matchesAny(body, cfg.KEYWORDS.saludo);
-  const quiereTurno = matchesAny(body, cfg.KEYWORDS.turno);
-  const quierePrecios = matchesAny(body, cfg.KEYWORDS.precios);
-  const quiereServicios = matchesAny(body, cfg.KEYWORDS.servicios);
+  // ── DETECCIÓN DE TRATAMIENTO (siempre tiene prioridad) ──────────────────────
   const tratamientoDirecto = detectarTratamiento(body);
-
-  // Pregunta directa por un tratamiento específico
-  if (tratamientoDirecto && !conv) {
+  if (tratamientoDirecto) {
     if (INFO_TRATAMIENTOS[tratamientoDirecto]) {
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[tratamientoDirecto] });
       setConv(jid, 'esperando_previos', { tratamiento: tratamientoDirecto });
@@ -303,6 +297,12 @@ async function handleMessage(sock, msg) {
     }
     return;
   }
+
+  // ── INICIO DEL FLUJO (saludo o primer mensaje) ───────────────────────────────
+  const esSaludo = matchesAny(body, cfg.KEYWORDS.saludo);
+  const quiereTurno = matchesAny(body, cfg.KEYWORDS.turno);
+  const quierePrecios = matchesAny(body, cfg.KEYWORDS.precios);
+  const quiereServicios = matchesAny(body, cfg.KEYWORDS.servicios);
 
   if (quiereTurno) {
     await sock.sendMessage(jid, {
@@ -544,11 +544,58 @@ function iniciarCrons(sock) {
     console.log('[CRON] Alerta deudores enviada a Aldana');
   }, { timezone: 'America/Argentina/San_Juan' });
 
+  cron.schedule(cfg.CRON_SEMANAL_PROFS, async () => {
+    const data = loadData();
+    const ahora = new Date();
+    // próxima semana: lunes a sábado
+    const diasSemana = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const inicio = new Date(ahora);
+    inicio.setDate(ahora.getDate() + 1); // mañana (lunes)
+    inicio.setHours(0, 0, 0, 0);
+    const fin = new Date(inicio);
+    fin.setDate(inicio.getDate() + 5); // hasta sábado inclusive
+    fin.setHours(23, 59, 59, 999);
+
+    for (const prof of cfg.PROFESIONALES) {
+      const turnosProf = (data.turnos || []).filter(t => {
+        const fecha = new Date(t.fecha);
+        return fecha >= inicio && fecha <= fin && (t.profId === prof.profId || (t.profesional || '').includes(prof.nombre.split(' ').slice(-1)[0]));
+      }).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+      if (!turnosProf.length) continue;
+
+      let txt = `📅 *Turnos semana del ${inicio.toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit'})} al ${fin.toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit'})}*\n`;
+      txt += `_${prof.nombre}_\n\n`;
+
+      const agrupados = {};
+      for (const t of turnosProf) {
+        const f = new Date(t.fecha);
+        const key = f.toLocaleDateString('es-AR', { weekday:'long', day:'2-digit', month:'2-digit' });
+        if (!agrupados[key]) agrupados[key] = [];
+        agrupados[key].push(t);
+      }
+
+      for (const [dia, ts] of Object.entries(agrupados)) {
+        txt += `*${dia.charAt(0).toUpperCase() + dia.slice(1)}*\n`;
+        for (const t of ts) {
+          const h = new Date(t.fecha).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+          txt += `  • ${h} — ${t.paciente || 'Paciente'} (${t.tratamiento || t.servicio || 'Turno'})\n`;
+        }
+        txt += '\n';
+      }
+
+      txt += `_ONE DEPIL • ${cfg.CLINICA.horario}_`;
+      await sock.sendMessage(prof.wa, { text: txt }).catch(() => {});
+      console.log(`[CRON] Reporte semanal enviado a ${prof.nombre}`);
+    }
+  }, { timezone: 'America/Argentina/San_Juan' });
+
   console.log('[CRON] Recordatorios:', cfg.CRON_RECORDATORIOS);
   console.log('[CRON] Briefing:', cfg.CRON_BRIEFING);
   console.log('[CRON] Reporte consultas:', cfg.CRON_REPORTE);
   console.log('[CRON] Cierre financiero:', cfg.CRON_CIERRE);
   console.log('[CRON] Alerta deudores:', cfg.CRON_DEUDORES);
+  console.log('[CRON] Reporte semanal profesionales:', cfg.CRON_SEMANAL_PROFS);
 }
 
 // ─── CONEXIÓN ────────────────────────────────────────────────────────────────

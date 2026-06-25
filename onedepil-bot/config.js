@@ -26,6 +26,15 @@ module.exports = {
   // Aldana por separado para avisos de deudores
   ALDANA_WA: '5492645635397@s.whatsapp.net',
 
+  // Profesionales — reciben reporte semanal de sus turnos
+  PROFESIONALES: [
+    { nombre: 'Dra. Sabrina Quiroga', wa: '5492645884052@s.whatsapp.net', profId: 'p1' },
+    { nombre: 'Dr. Andrés Echegaray', wa: '5492646601873@s.whatsapp.net', profId: 'p2' },
+    { nombre: 'Dr. Rolando Ribaudo',  wa: '5492614696351@s.whatsapp.net', profId: 'p3' },
+    { nombre: 'Dra. Laura Otiñano',   wa: '5492644152421@s.whatsapp.net', profId: 'p5' },
+    { nombre: 'Dr. Walter Antuña',    wa: '5492644983189@s.whatsapp.net', profId: 'p4' },
+  ],
+
   DATA_FILE: './data.json',
 
   CRON_RECORDATORIOS:   '0 10 * * *',       // recordatorios turnos — 10am todos los días
@@ -33,6 +42,7 @@ module.exports = {
   CRON_REPORTE:         '*/30 10-21 * * 1-6', // resumen consultas — cada 30min de 10 a 21hs
   CRON_CIERRE:          '15 21 * * 1-6',     // cierre financiero diario — 21:15hs lunes a sábado
   CRON_DEUDORES:        '0 10 * * 1',        // alerta deudores — lunes 10am
+  CRON_SEMANAL_PROFS:   '0 18 * * 0',        // reporte semanal a profesionales — domingo 18hs
 
   KEYWORDS: {
     turno:    ['turno','turnos','sacar turno','quiero turno','reservar','agenda','agendar','saco','quiero sacar'],
