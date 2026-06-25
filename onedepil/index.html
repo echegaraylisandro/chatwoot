@@ -1357,18 +1357,18 @@ function openModalPaciente(editId){
       <div class="form-group"><label>Teléfono / WhatsApp</label><input type="text" id="mp-tel" value="${p?p.tel||'':''}" placeholder="549264…"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Email</label><input type="email" id="mp-email" value="${p?p.email||':'':''}"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="mp-email" value="${p?p.email||'':''}"/></div>
       <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="mp-nac" value="${p?p.nac||'':''}" /></div>
     </div>
     <div class="form-group"><label>Notas / Antecedentes</label><textarea id="mp-notas" rows="3">${p?p.notas||'':''}</textarea></div>
     <hr class="divider"/>
     <div class="card-title" style="margin-bottom:8px">🏥 Ficha Clínica</div>
     <div class="form-row">
-      <div class="form-group"><label>Alergias conocidas</label><input type="text" id="mp-alergias" value="${p?p.alergias||'':''" placeholder="Ninguna / penicilina…"/></div>
-      <div class="form-group"><label>Contraindicaciones</label><input type="text" id="mp-contra" value="${p?p.contra||'':''" placeholder="Marcapasos / embarazo…"/></div>
+      <div class="form-group"><label>Alergias conocidas</label><input type="text" id="mp-alergias" value="${p?p.alergias||'':''}" placeholder="Ninguna / penicilina…"/></div>
+      <div class="form-group"><label>Contraindicaciones</label><input type="text" id="mp-contra" value="${p?p.contra||'':''}" placeholder="Marcapasos / embarazo…"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Medicación habitual</label><input type="text" id="mp-medicacion" value="${p?p.medicacion||'':''" placeholder="Ninguna…"/></div>
+      <div class="form-group"><label>Medicación habitual</label><input type="text" id="mp-medicacion" value="${p?p.medicacion||'':''}" placeholder="Ninguna…"/></div>
       <div class="form-group"><label>Zona de piel</label>
         <select id="mp-piel">
           <option value="">— </option>
