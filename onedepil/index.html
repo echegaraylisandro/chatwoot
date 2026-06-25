@@ -822,9 +822,22 @@ const DEFAULT_STOCK = [
   {id:'st9',nombre:'Lavandina',cat:'limpieza',stock:3,minimo:2,unidad:'lt'},
   {id:'st10',nombre:'Alcohol 70°',cat:'limpieza',stock:4,minimo:2,unidad:'lt'},
   {id:'st11',nombre:'Detergente industrial',cat:'limpieza',stock:2,minimo:1,unidad:'lt'},
-  {id:'st12',nombre:'Crema hidratante post-trat.',cat:'venta',stock:8,minimo:3,unidad:'u'},
-  {id:'st13',nombre:'SPF 50+ facial',cat:'venta',stock:6,minimo:3,unidad:'u'},
-  {id:'st14',nombre:'Sérum vitamina C',cat:'venta',stock:4,minimo:2,unidad:'u'},
+  // Productos de venta al público (con precio lista y contado)
+  {id:'st12',nombre:'Extra Film DIA — Crema 50ml',cat:'venta',stock:6,minimo:2,unidad:'u',precio:28500,precioC:25000},
+  {id:'st13',nombre:'Extra Film NOCHE — Crema 50ml',cat:'venta',stock:6,minimo:2,unidad:'u',precio:28500,precioC:25000},
+  {id:'st14',nombre:'Multidefensa Hidratante SPF50',cat:'venta',stock:5,minimo:2,unidad:'u',precio:22000,precioC:19500},
+  {id:'st15',nombre:'Sérum Vitamina C',cat:'venta',stock:4,minimo:2,unidad:'u',precio:18000,precioC:15500},
+  {id:'st16',nombre:'Sérum Ácido Hialurónico',cat:'venta',stock:4,minimo:2,unidad:'u',precio:18000,precioC:15500},
+  {id:'st17',nombre:'Contorno de Ojos',cat:'venta',stock:3,minimo:1,unidad:'u',precio:20000,precioC:17500},
+  {id:'st18',nombre:'Mascarilla Iluminadora',cat:'venta',stock:4,minimo:2,unidad:'u',precio:15000,precioC:13000},
+  {id:'st19',nombre:'Exfoliante Facial',cat:'venta',stock:3,minimo:1,unidad:'u',precio:14000,precioC:12000},
+  {id:'st20',nombre:'Tónico Equilibrante',cat:'venta',stock:3,minimo:1,unidad:'u',precio:13000,precioC:11500},
+  {id:'st21',nombre:'Limpiador Micelar',cat:'venta',stock:4,minimo:2,unidad:'u',precio:12000,precioC:10500},
+  {id:'st22',nombre:'SPF 50+ Facial (solo)',cat:'venta',stock:5,minimo:2,unidad:'u',precio:16000,precioC:14000},
+  // Insumos de tratamiento adicionales
+  {id:'st23',nombre:'Gel conductor láser',cat:'tratamiento',stock:3,minimo:1,unidad:'kg'},
+  {id:'st24',nombre:'Ampollas mesoterapia',cat:'tratamiento',stock:20,minimo:8,unidad:'u'},
+  {id:'st25',nombre:'Crema anestésica tópica',cat:'tratamiento',stock:5,minimo:2,unidad:'u'},
 ];
 
 // ========== STATE ==========
@@ -1092,6 +1105,7 @@ function renderStock(){
           <div style="text-align:right;margin-left:12px;flex-shrink:0">
             <div style="font-size:18px;font-weight:700;color:${color}">${s.stock}</div>
             <div style="font-size:11px;color:var(--text2)">${s.unidad} · mín ${s.minimo}</div>
+            ${s.precio?`<div style="font-size:11px;color:var(--gold);margin-top:2px">Lista ${fmtPeso(s.precio)} · Ctdo ${fmtPeso(s.precioC||s.precio)}</div>`:''}
             <div style="display:flex;gap:4px;margin-top:4px">
               <button class="btn btn-ghost btn-sm" onclick="ajustarStock('${s.id}',-1)" style="padding:3px 8px">−</button>
               <button class="btn btn-gold btn-sm" onclick="ajustarStock('${s.id}',1)" style="padding:3px 8px">+</button>
@@ -1556,6 +1570,10 @@ function openModalStock(editId){
       <div class="form-group"><label>Stock Actual</label><input type="number" id="ms-stock" value="${s?s.stock:0}"/></div>
       <div class="form-group"><label>Stock Mínimo (alerta)</label><input type="number" id="ms-minimo" value="${s?s.minimo:2}"/></div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label>Precio Lista (tarjeta)</label><input type="number" id="ms-precio" value="${s&&s.precio?s.precio:''}" placeholder="dejar vacío si no es venta"/></div>
+      <div class="form-group"><label>Precio Contado</label><input type="number" id="ms-precioC" value="${s&&s.precioC?s.precioC:''}" placeholder="efectivo/transferencia"/></div>
+    </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
       ${editId?`<button class="btn btn-red" onclick="delStock('${editId}')">Eliminar</button>`:''}
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -1565,7 +1583,9 @@ function openModalStock(editId){
 }
 function saveStock(editId){
   const n=document.getElementById('ms-nombre').value.trim();if(!n)return toast('Ingresá el nombre');
-  const data={id:editId||uid(),nombre:n,cat:document.getElementById('ms-cat').value,unidad:document.getElementById('ms-unidad').value,stock:parseInt(document.getElementById('ms-stock').value)||0,minimo:parseInt(document.getElementById('ms-minimo').value)||1};
+  const precioV=parseFloat(document.getElementById('ms-precio').value)||0;
+  const precioCv=parseFloat(document.getElementById('ms-precioC').value)||0;
+  const data={id:editId||uid(),nombre:n,cat:document.getElementById('ms-cat').value,unidad:document.getElementById('ms-unidad').value,stock:parseInt(document.getElementById('ms-stock').value)||0,minimo:parseInt(document.getElementById('ms-minimo').value)||1,...(precioV?{precio:precioV,precioC:precioCv||precioV}:{})};
   if(editId){const i=STATE.stock.findIndex(s=>s.id===editId);STATE.stock[i]=data;}else STATE.stock.push(data);
   save();closeModal();renderStock();toast('Item guardado ✓');
 }
