@@ -228,6 +228,22 @@ function setConv(jid, step, data = {}) {
 }
 function clearConv(jid) { convState.delete(jid); }
 
+// ─── CONTROL HUMANO ──────────────────────────────────────────────────────────
+// Cuando un operador humano responde manualmente, el bot se silencia 2hs
+const HUMANO_TIMEOUT = 2 * 60 * 60 * 1000; // 2 horas
+const humanControl = new Map(); // jid → timestamp del último mensaje humano
+const botMsgIds = new Set();    // IDs de mensajes enviados por el bot
+
+function marcarMensajeBot(msgId) { botMsgIds.add(msgId); }
+function humanoCargo(jid) { humanControl.set(jid, Date.now()); }
+function humanActivo(jid) {
+  const ts = humanControl.get(jid);
+  if (!ts) return false;
+  if (Date.now() - ts > HUMANO_TIMEOUT) { humanControl.delete(jid); return false; }
+  return true;
+}
+function liberarHumano(jid) { humanControl.delete(jid); }
+
 // ─── NOTIFICAR AL EQUIPO ──────────────────────────────────────────────────────
 async function notificarEquipo(sock, txt) {
   for (const m of cfg.EQUIPO) {
@@ -245,11 +261,18 @@ function saludoHora() {
 // ─── CONFIRMAR TURNO Y PEDIR SEÑA ────────────────────────────────────────────
 async function confirmarTurnoConSena(sock, jid, paciente, num, horario, desc, monto, profIdTurno=null) {
   const montoTexto = fmtPeso(monto);
-  await sock.sendMessage(jid, {
+  await botSend(sock, jid, {
     text: `Perfecto, anotamos tu turno para *${desc}* — *${horario}*.\n\nPara reservar el lugar te pedimos una seña de *${montoTexto}*${desc.includes('Consulta') ? ' (se descuenta del tratamiento)' : ''}.\n\nTransferí al alias:\n*${cfg.ALIAS_PAGO}*\n\nY enviame el comprobante acá para confirmar. 😊`,
   });
   await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 ${desc}\n🗓️ ${horario}\n💰 Seña: ${montoTexto}\n⏳ Esperando comprobante`);
   convState.set(jid, { step: 'esperando_comprobante', data: { desc, monto, profIdTurno }, ts: Date.now() });
+}
+
+// ─── ENVÍO REGISTRADO (para distinguir bot vs humano) ────────────────────────
+async function botSend(sock, jid, content) {
+  const sent = await botSend(sock, jid, content);
+  if (sent?.key?.id) marcarMensajeBot(sent.key.id);
+  return sent;
 }
 
 // ─── FLUJO DE PROSPECCIÓN ─────────────────────────────────────────────────────
@@ -260,6 +283,12 @@ async function handleMessage(sock, msg) {
   const body = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
   const tieneImagen = !!(msg.message?.imageMessage || msg.message?.documentMessage);
   if (!body && !tieneImagen) return;
+
+  // Si un humano tomó el control, el bot no interviene
+  if (humanActivo(jid)) {
+    console.log(`🤫 [BOT] Silenciado en ${jid} — operador humano activo`);
+    return;
+  }
 
   const num = jid.replace('@s.whatsapp.net', '');
   const data = loadData();
@@ -276,7 +305,7 @@ async function handleMessage(sock, msg) {
   const nMsg = normalize(body);
   const palabrasInapropiadas = ['puta','mierda','idiota','imbecil','estupid','inutil','sexo','prostitut','porno','drogas','pedo','boludo','pelotud','concha','culo','pija','mogolico'];
   if (palabrasInapropiadas.some(p => nMsg.includes(p))) {
-    await sock.sendMessage(jid, {
+    await botSend(sock, jid, {
       text: `Hola, soy Aldana de One Depil. Solo puedo ayudarte con consultas sobre nuestros tratamientos y turnos. ¿Te puedo orientar en algo?`,
     });
     clearConv(jid);
@@ -291,12 +320,12 @@ async function handleMessage(sock, msg) {
     );
     if (turnosPendientes.length > 0) {
       const t = turnosPendientes[0];
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Perfecto${nombre ? ' ' + nombre : ''}, turno confirmado para el ${fmtFecha(t.fecha)} a las ${t.hora}hs. Te esperamos.`,
       });
       await notificarEquipo(sock, `✅ *Turno confirmado*\n👤 ${paciente?.nombre || num}\n📅 ${fmtFecha(t.fecha)} ${t.hora}hs — ${t.servicio || ''}`);
     } else {
-      await sock.sendMessage(jid, { text: `Perfecto, quedo a disposicion por cualquier consulta.` });
+      await botSend(sock, jid, { text: `Perfecto, quedo a disposicion por cualquier consulta.` });
     }
     clearConv(jid);
     return;
@@ -304,7 +333,7 @@ async function handleMessage(sock, msg) {
 
   // ── CANCELACIÓN ─────────────────────────────────────────────────────────────
   if (matchesAny(body, cfg.KEYWORDS.cancelar)) {
-    await sock.sendMessage(jid, { text: `No hay problema${nombre ? ' ' + nombre : ''}, cuando puedas coordinar avisame y te busco un turno.` });
+    await botSend(sock, jid, { text: `No hay problema${nombre ? ' ' + nombre : ''}, cuando puedas coordinar avisame y te busco un turno.` });
     await notificarEquipo(sock, `⚠️ *Cancelación*\n👤 ${paciente?.nombre || '+' + num}\nMensaje: "${body}"`);
     clearConv(jid);
     return;
@@ -317,13 +346,13 @@ async function handleMessage(sock, msg) {
     const { desc, monto } = conv.data;
     const tieneImagen = !!(msg.message?.imageMessage || msg.message?.documentMessage);
     if (tieneImagen || body.length > 5) {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `¡Perfecto! Recibimos tu comprobante. Tu turno para ${desc} queda *confirmado*. Te avisamos la fecha y hora exacta a la brevedad. ¡Gracias!`,
       });
       await notificarEquipo(sock, `💰 *Seña recibida*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 ${desc}\n💵 Seña: ${fmtPeso(monto)}\n⚡ Confirmar turno en la agenda`);
       clearConv(jid);
     } else {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Para confirmar tu turno necesitamos el comprobante de la transferencia. Podés enviarlo como imagen o captura de pantalla.`,
       });
     }
@@ -333,7 +362,7 @@ async function handleMessage(sock, msg) {
   // PASO: turno anotado esperando comprobante — recordatorio
   if (conv?.step === 'turno_anotado') {
     const { desc, monto } = conv.data;
-    await sock.sendMessage(jid, {
+    await botSend(sock, jid, {
       text: `Tu turno para ${desc} queda confirmado una vez que recibamos la seña de ${fmtPeso(monto)}. Transferí al alias *${cfg.ALIAS_PAGO}* y enviame el comprobante acá.`,
     });
     setConv(jid, 'esperando_comprobante', { desc, monto });
@@ -359,7 +388,7 @@ async function handleMessage(sock, msg) {
 
     const slots = getSlotsDisponibles(tratKey, data);
     if (slots.length === 0) {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `En este momento no tengo horarios disponibles en los próximos días para mostrarte. Escribime tu preferencia y lo coordinamos manualmente.`,
       });
       setConv(jid, 'esperando_slot_manual', { desc, monto, tratamiento, profIdTurno });
@@ -369,7 +398,7 @@ async function handleMessage(sock, msg) {
     let txt = `Estos son los horarios disponibles para *${desc}*:\n\n`;
     slots.forEach((s, i) => { txt += `*${i + 1}.* ${s.label}\n`; });
     txt += `\nRespondé con el número de la opción que te queda mejor. 😊`;
-    await sock.sendMessage(jid, { text: txt });
+    await botSend(sock, jid, { text: txt });
     setConv(jid, 'esperando_slot', { desc, monto, slots, tratamiento, profIdTurno });
     return;
   }
@@ -389,7 +418,7 @@ async function handleMessage(sock, msg) {
         await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto, profIdTurno);
         return;
       }
-      await sock.sendMessage(jid, { text: `Respondé con el número de la opción (1, 2, 3...) o escribí el día y hora que te convenga.` });
+      await botSend(sock, jid, { text: `Respondé con el número de la opción (1, 2, 3...) o escribí el día y hora que te convenga.` });
       return;
     }
 
@@ -410,12 +439,12 @@ async function handleMessage(sock, msg) {
     const nB = normalize(body);
     const confirma = matchesAny(body, ['si','sí','dale','ok','bueno','claro','perfecto','quiero','me interesa','coordina','agendame']);
     if (confirma) {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
       });
       setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento });
     } else {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `No hay problema. Si en algún momento querés coordinar la valoración, escribime y lo armamos. ¿Hay algo más en lo que te pueda ayudar?`,
       });
       clearConv(jid);
@@ -435,12 +464,12 @@ async function handleMessage(sock, msg) {
         .filter(t => t.pacienteId === paciente.id && t.servicio)
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
       if (ultimoTurno) {
-        await sock.sendMessage(jid, {
+        await botSend(sock, jid, {
           text: `Entendido${nombre ? ' ' + nombre : ''}, turno para *${ultimoTurno.servicio}* como la última vez. ¿Qué día y horario te queda bien? Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.`,
         });
         setConv(jid, 'esperando_horario', { tratamiento: ultimoTurno.servicio });
       } else {
-        await sock.sendMessage(jid, {
+        await botSend(sock, jid, {
           text: `Claro${nombre ? ' ' + nombre : ''}, ¿podés decirme qué tratamiento querés? No tengo registrado el último para buscártelo rápido.`,
         });
       }
@@ -450,7 +479,7 @@ async function handleMessage(sock, msg) {
     // Detección de frustración o confusión
     const estaConfundido = nB.includes('como') || nB.includes('no sabes') || nB.includes('no entiendo') || nB.includes('que') && body.endsWith('?') && body.length < 15;
     if (estaConfundido && !trat) {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Disculpá la confusión. Para agilizar, ¿cuál de estos querés?\n\n• Depilación láser\n• Tratamiento facial (Endolift, Botox, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta con la Dra. Sabrina\n• Otra consulta`,
       });
       return;
@@ -459,20 +488,20 @@ async function handleMessage(sock, msg) {
     const esConsultaDirecta = nB.includes('consulta') || nB.includes('sabrina') || nB.includes('agend');
 
     if (trat && INFO_TRATAMIENTOS[trat]) {
-      await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[trat] });
+      await botSend(sock, jid, { text: INFO_TRATAMIENTOS[trat] });
       if (esAltoValor(trat)) {
         setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: trat });
       } else {
         setConv(jid, 'esperando_horario', { tratamiento: trat });
       }
     } else if (esConsultaDirecta) {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Perfecto. Te muestro los horarios disponibles para una consulta con la Dra. Sabrina.`,
       });
       setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
     } else {
       // No avanzar con texto sin sentido — ofrecer opciones concretas
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Puedo ayudarte con:\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta médica (Dra. Sabrina, Ginecología, Endocrinología)\n• Precios e información\n\n¿Cuál te interesa?`,
       });
     }
@@ -485,11 +514,11 @@ async function handleMessage(sock, msg) {
     setConv(jid, 'esperando_tratamiento');
 
     if (esPrimera) {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Bienvenida/o a One Depil. Somos una clínica médico-estética, trabajamos con la Dra. Sabrina Quiroga y un equipo de profesionales. ¿Tenés algún tratamiento en mente o querés que te cuente las opciones?`,
       });
     } else {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `Hola${nombre ? ' ' + nombre : ''}, qué bueno que nos escribís. ¿En qué te podemos ayudar?`,
       });
     }
@@ -514,7 +543,7 @@ async function handleMessage(sock, msg) {
     } else {
       resp = `Contame un poco más — ¿qué zona o qué resultado querés lograr? Con eso puedo orientarte mejor sobre qué tratamiento se adapta a lo que buscás.`;
     }
-    await sock.sendMessage(jid, { text: resp });
+    await botSend(sock, jid, { text: resp });
     setConv(jid, 'esperando_tratamiento');
     return;
   }
@@ -524,7 +553,7 @@ async function handleMessage(sock, msg) {
     const nombreIngresado = body.trim();
     const pareceNombre = /^[a-záéíóúüñ\s]{3,}$/i.test(nombreIngresado);
     if (!pareceNombre) {
-      await sock.sendMessage(jid, { text: `Necesito tu nombre y apellido para buscarte. ¿Me los decís?` });
+      await botSend(sock, jid, { text: `Necesito tu nombre y apellido para buscarte. ¿Me los decís?` });
       return;
     }
     const encontrado = (data.pacientes || []).find(p =>
@@ -537,10 +566,10 @@ async function handleMessage(sock, msg) {
       await notificarEquipo(sock, `👤 *Paciente reconocido*\n*${encontrado.nombre}* (+${num})${ventas}\n🔔 Consultando por WhatsApp`);
       const ultimoT = (data.turnos || []).filter(t => t.pacienteId === encontrado.id).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))[0];
       const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio}.` : '';
-      await sock.sendMessage(jid, { text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?` });
+      await botSend(sock, jid, { text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?` });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado });
     } else {
-      await sock.sendMessage(jid, { text: `${saludoHora()}, soy Aldana de One Depil. No te encuentro en el sistema, pero te ayudo igual. ¿Sobre qué tratamiento querés consultar?` });
+      await botSend(sock, jid, { text: `${saludoHora()}, soy Aldana de One Depil. No te encuentro en el sistema, pero te ayudo igual. ¿Sobre qué tratamiento querés consultar?` });
       setConv(jid, 'esperando_tratamiento', { nombreIngresado });
     }
     return;
@@ -550,14 +579,14 @@ async function handleMessage(sock, msg) {
   const tratamientoDirecto = detectarTratamiento(body);
   if (tratamientoDirecto) {
     if (INFO_TRATAMIENTOS[tratamientoDirecto]) {
-      await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[tratamientoDirecto] });
+      await botSend(sock, jid, { text: INFO_TRATAMIENTOS[tratamientoDirecto] });
       if (esAltoValor(tratamientoDirecto)) {
         setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: tratamientoDirecto });
       } else {
         setConv(jid, 'esperando_horario', { tratamiento: tratamientoDirecto });
       }
     } else {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `${saludoHora()}${nombre ? ' ' + nombre : ''}, te habla Aldana de One Depil. Consultame lo que necesitás que te ayudo.`,
       });
       setConv(jid, 'esperando_tratamiento');
@@ -575,11 +604,11 @@ async function handleMessage(sock, msg) {
 
   // Horario y ubicación solo cuando no hay flujo activo
   if (!conv && matchesAny(body, cfg.KEYWORDS.horario)) {
-    await sock.sendMessage(jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en el ${cfg.CLINICA.direccion}. ¿Te gustaría que coordinemos un turno?` });
+    await botSend(sock, jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en el ${cfg.CLINICA.direccion}. ¿Te gustaría que coordinemos un turno?` });
     return;
   }
   if (!conv && matchesAny(body, cfg.KEYWORDS.ubicacion)) {
-    await sock.sendMessage(jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan. Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.` });
+    await botSend(sock, jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan. Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.` });
     return;
   }
 
@@ -590,7 +619,7 @@ async function handleMessage(sock, msg) {
         .filter(t => t.pacienteId === paciente.id && t.servicio)
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
       if (ultimoTurno) {
-        await sock.sendMessage(jid, { text: `Perfecto${nombre ? ' ' + nombre : ''}, te busco turno para *${ultimoTurno.servicio}* como la última vez.` });
+        await botSend(sock, jid, { text: `Perfecto${nombre ? ' ' + nombre : ''}, te busco turno para *${ultimoTurno.servicio}* como la última vez.` });
         setConv(jid, 'esperando_horario', { tratamiento: ultimoTurno.servicio });
         return;
       }
@@ -600,20 +629,20 @@ async function handleMessage(sock, msg) {
     if (tieneDia) {
       await confirmarTurnoConSena(sock, jid, paciente, num, body, 'el turno solicitado', 40000);
     } else {
-      await sock.sendMessage(jid, { text: `${nombre ? nombre + ', ¿q' : '¿Q'}ué tratamiento o consulta querés hacer?` });
+      await botSend(sock, jid, { text: `${nombre ? nombre + ', ¿q' : '¿Q'}ué tratamiento o consulta querés hacer?` });
       setConv(jid, 'esperando_tratamiento');
     }
     return;
   }
 
   if (quierePrecios) {
-    await sock.sendMessage(jid, { text: `Los valores dependen del tratamiento. ¿Sobre cuál querés consultar?` });
+    await botSend(sock, jid, { text: `Los valores dependen del tratamiento. ¿Sobre cuál querés consultar?` });
     setConv(jid, 'esperando_tratamiento');
     return;
   }
 
   if (quiereServicios) {
-    await sock.sendMessage(jid, {
+    await botSend(sock, jid, {
       text: `Hacemos depilación láser Mediostar, Botox, Endolift, Endymed, HIFU, Criolipolisis, Mesoterapia, PRP, Peeling, Alquimia, Limpiezas faciales, Suero terapias, enCurve, CM Slim, y también Ginecología y Endocrinología. ¿Hay alguno en particular que te interesa?`,
     });
     setConv(jid, 'esperando_tratamiento');
@@ -628,12 +657,12 @@ async function handleMessage(sock, msg) {
         .filter(t => t.pacienteId === paciente.id)
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
       const historial = ultimoTurno ? ` Veo que tu última visita fue para ${ultimoTurno.servicio || 'un tratamiento'}.` : '';
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historial} ¿En qué te puedo ayudar hoy?`,
       });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: paciente });
     } else {
-      await sock.sendMessage(jid, {
+      await botSend(sock, jid, {
         text: `${saludoHora()}, soy Aldana, coordinadora de One Depil — clínica médico-estética. ¿Me decís tu nombre y apellido para verificar si ya tenés historial con nosotros?`,
       });
       setConv(jid, 'esperando_identificacion');
@@ -904,7 +933,23 @@ async function conectar() {
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
     for (const msg of messages) {
-      if (msg.key.fromMe) continue;
+      const jid = msg.key.remoteJid;
+      if (!jid || jid.endsWith('@g.us')) continue;
+
+      // Mensaje saliente: determinar si lo envió el bot o un humano
+      if (msg.key.fromMe) {
+        const msgId = msg.key.id;
+        if (botMsgIds.has(msgId)) {
+          botMsgIds.delete(msgId); // ya procesado
+        } else {
+          // Mensaje enviado manualmente por el operador humano
+          humanoCargo(jid);
+          clearConv(jid);
+          console.log(`👤 [HUMANO] Tomó el control de ${jid}`);
+        }
+        continue;
+      }
+
       try { await handleMessage(sock, msg); }
       catch (e) { console.error('[MSG]', e.message); }
     }
