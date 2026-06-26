@@ -243,13 +243,13 @@ function saludoHora() {
   return 'Buenas noches';
 }
 // ─── CONFIRMAR TURNO Y PEDIR SEÑA ────────────────────────────────────────────
-async function confirmarTurnoConSena(sock, jid, paciente, num, horario, desc, monto) {
+async function confirmarTurnoConSena(sock, jid, paciente, num, horario, desc, monto, profIdTurno=null) {
   const montoTexto = fmtPeso(monto);
   await sock.sendMessage(jid, {
     text: `Perfecto, anotamos tu turno para *${desc}* — *${horario}*.\n\nPara reservar el lugar te pedimos una seña de *${montoTexto}*${desc.includes('Consulta') ? ' (se descuenta del tratamiento)' : ''}.\n\nTransferí al alias:\n*${cfg.ALIAS_PAGO}*\n\nY enviame el comprobante acá para confirmar. 😊`,
   });
   await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 ${desc}\n🗓️ ${horario}\n💰 Seña: ${montoTexto}\n⏳ Esperando comprobante`);
-  convState.set(jid, { step: 'esperando_comprobante', data: { desc, monto }, ts: Date.now() });
+  convState.set(jid, { step: 'esperando_comprobante', data: { desc, monto, profIdTurno }, ts: Date.now() });
 }
 
 // ─── FLUJO DE PROSPECCIÓN ─────────────────────────────────────────────────────
@@ -344,16 +344,23 @@ async function handleMessage(sock, msg) {
   if (conv?.step === 'esperando_horario') {
     const { tratamiento, tipo } = conv.data;
     const esConsulta = tipo === 'consulta';
-    const tratKey = esConsulta ? 'consulta' : (tratamiento || '').toLowerCase().split(' ')[0];
-    const desc = esConsulta ? `Consulta con Dra. Sabrina Quiroga` : (tratamiento || 'el tratamiento');
-    const monto = esConsulta ? PRECIO_CONSULTA : 40000;
+    const tratKey = esConsulta ? 'consulta' : (tratamiento || '').toLowerCase();
+    // Especialidades médicas — doctor asignado
+    const ESPECIALIDAD_PROF = {
+      ginecologia:    { desc: 'Consulta ginecológica — Dr. Andrés Echegaray', profId: 'p2' },
+      endocrinologia: { desc: 'Consulta endocrinológica — Dra. Laura Otiñano', profId: 'p5' },
+    };
+    const espProf = ESPECIALIDAD_PROF[tratamiento];
+    const desc = espProf ? espProf.desc : esConsulta ? `Consulta con Dra. Sabrina Quiroga` : (tratamiento || 'el tratamiento');
+    const profIdTurno = espProf ? espProf.profId : esConsulta ? 'p1' : null;
+    const monto = (esConsulta || espProf) ? PRECIO_CONSULTA : 40000;
 
     const slots = getSlotsDisponibles(tratKey, data);
     if (slots.length === 0) {
       await sock.sendMessage(jid, {
         text: `En este momento no tengo horarios disponibles en los próximos días para mostrarte. Escribime tu preferencia y lo coordinamos manualmente.`,
       });
-      setConv(jid, 'esperando_slot_manual', { desc, monto, tratamiento });
+      setConv(jid, 'esperando_slot_manual', { desc, monto, tratamiento, profIdTurno });
       return;
     }
 
@@ -361,7 +368,7 @@ async function handleMessage(sock, msg) {
     slots.forEach((s, i) => { txt += `*${i + 1}.* ${s.label}\n`; });
     txt += `\nRespondé con el número de la opción que te queda mejor. 😊`;
     await sock.sendMessage(jid, { text: txt });
-    setConv(jid, 'esperando_slot', { desc, monto, slots, tratamiento });
+    setConv(jid, 'esperando_slot', { desc, monto, slots, tratamiento, profIdTurno });
     return;
   }
 
@@ -372,25 +379,26 @@ async function handleMessage(sock, msg) {
     const idx = parseInt(body.trim()) - 1;
     const slot = (idx >= 0 && idx < slots.length) ? slots[idx] : null;
 
+    const { profIdTurno } = conv.data;
     if (!slot) {
       // Cualquier texto que no sea un número se trata como horario libre escrito
       const esDia = /lunes|martes|miercoles|jueves|viernes|sabado|\d{1,2}\/\d|\d{1,2}hs|a las \d|mismo horario|misma hora/.test(nB);
       if (esDia || body.trim().length > 5) {
-        await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto);
+        await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto, profIdTurno);
         return;
       }
       await sock.sendMessage(jid, { text: `Respondé con el número de la opción (1, 2, 3...) o escribí el día y hora que te convenga.` });
       return;
     }
 
-    await confirmarTurnoConSena(sock, jid, paciente, num, `${slot.label}`, desc, monto);
+    await confirmarTurnoConSena(sock, jid, paciente, num, `${slot.label}`, desc, monto, profIdTurno);
     return;
   }
 
   // PASO: horario libre escrito a mano
   if (conv?.step === 'esperando_slot_manual') {
-    const { desc, monto } = conv.data;
-    await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto);
+    const { desc, monto, profIdTurno } = conv.data;
+    await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto, profIdTurno);
     return;
   }
 

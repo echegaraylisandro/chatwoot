@@ -294,7 +294,12 @@ h3{font-size:15px;font-weight:600;color:var(--text)}
 <div id="tab-pacientes" class="tab-panel">
   <div class="sec-header">
     <h2>👥 Pacientes</h2>
-    <button class="btn btn-gold" onclick="openModalPaciente()">+ Paciente</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="mis-pac-toggle" style="display:none">
+        <button id="mis-pac-btn" class="btn btn-ghost btn-sm" onclick="toggleMisPacientes()" style="font-size:12px">Mis Pacientes</button>
+      </div>
+      <button class="btn btn-gold" onclick="openModalPaciente()">+ Paciente</button>
+    </div>
   </div>
   <div class="search-wrap"><input type="text" id="pac-search" placeholder="Buscar paciente…" oninput="renderPacientes()"/></div>
   <div id="pacientes-list"></div>
@@ -783,12 +788,13 @@ async function doLogin() {
   if (!user) { err.textContent = 'Usuario o contraseña incorrectos.'; return; }
   const h = await sha256(p);
   if (h !== user.hash) { err.textContent = 'Usuario o contraseña incorrectos.'; return; }
-  SESSION = { usuario: u, rol: user.rol, nombre: user.nombre };
+  SESSION = { usuario: u, rol: user.rol, nombre: user.nombre, profId: user.profId||null };
   sessionStorage.setItem('od_session', JSON.stringify(SESSION));
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('login-user-display').textContent = user.nombre + ' (' + user.rol + ')';
   document.getElementById('btn-logout').style.display = '';
   aplicarRol();
+  initMisPacientesBtn();
   await init();
 }
 
@@ -824,6 +830,7 @@ async function checkSession() {
       document.getElementById('login-user-display').textContent = SESSION.nombre + ' (' + SESSION.rol + ')';
       document.getElementById('btn-logout').style.display = '';
       aplicarRol();
+      initMisPacientesBtn();
       await init();
       return true;
     }
@@ -1136,6 +1143,9 @@ function turnoCardHTML(t, compact=false){
 
 // ========== AGENDA ==========
 function renderAgenda(){
+  if(vistaAgenda==='semana'){renderAgendaSemana();return;}
+  if(vistaAgenda==='mes'){renderAgendaMes();return;}
+
   const fechaEl=document.getElementById('agenda-fecha');
   if(!fechaEl.value)fechaEl.value=today();
   const fecha=fechaEl.value;
@@ -1285,12 +1295,29 @@ function irADia(fecha){
 }
 
 // ========== PACIENTES ==========
+let misPacientesFiltro=false;
+function toggleMisPacientes(){
+  misPacientesFiltro=!misPacientesFiltro;
+  const btn=document.getElementById('mis-pac-btn');
+  if(btn){btn.style.background=misPacientesFiltro?'var(--gold)':'';btn.style.color=misPacientesFiltro?'#000':'';}
+  renderPacientes();
+}
+function initMisPacientesBtn(){
+  const toggle=document.getElementById('mis-pac-toggle');
+  if(toggle)toggle.style.display=(SESSION&&SESSION.rol==='medico')?'':'none';
+}
+
 function renderPacientes(){
   const q=(document.getElementById('pac-search')?.value||'').toLowerCase();
-  const lista=STATE.pacientes.filter(p=>
+  let lista=STATE.pacientes.filter(p=>
     p.nombre.toLowerCase().includes(q)||
     (p.tel&&p.tel.includes(q))
-  ).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  );
+  if(misPacientesFiltro&&SESSION&&SESSION.profId){
+    const misIds=new Set(STATE.turnos.filter(t=>t.profId===SESSION.profId).map(t=>t.pacienteId));
+    lista=lista.filter(p=>misIds.has(p.id));
+  }
+  lista.sort((a,b)=>a.nombre.localeCompare(b.nombre));
 
   document.getElementById('pacientes-list').innerHTML=lista.length===0
     ? '<div style="color:var(--text2);text-align:center;padding:30px">Sin pacientes registrados</div>'
@@ -1660,6 +1687,39 @@ function openModalPaciente(editId){
         </select>
       </div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ocupación</label><input type="text" id="mp-ocupacion" value="${p?p.ocupacion||'':''}" placeholder="Docente, comerciante…"/></div>
+      <div class="form-group"><label>Estado civil</label>
+        <select id="mp-estado-civil">
+          <option value="">—</option>
+          <option value="soltera" ${p&&p.estadoCivil==='soltera'?'selected':''}>Soltera/o</option>
+          <option value="casada" ${p&&p.estadoCivil==='casada'?'selected':''}>Casada/o</option>
+          <option value="en pareja" ${p&&p.estadoCivil==='en pareja'?'selected':''}>En pareja</option>
+          <option value="divorciada" ${p&&p.estadoCivil==='divorciada'?'selected':''}>Divorciada/o</option>
+          <option value="viuda" ${p&&p.estadoCivil==='viuda'?'selected':''}>Viuda/o</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Hábitos — Tabaco</label>
+        <select id="mp-tabaco">
+          <option value="">—</option>
+          <option value="no" ${p&&p.tabaco==='no'?'selected':''}>No fuma</option>
+          <option value="ex" ${p&&p.tabaco==='ex'?'selected':''}>Ex fumadora/or</option>
+          <option value="si" ${p&&p.tabaco==='si'?'selected':''}>Fuma</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Hábitos — Alcohol</label>
+        <select id="mp-alcohol">
+          <option value="">—</option>
+          <option value="no" ${p&&p.alcohol==='no'?'selected':''}>No consume</option>
+          <option value="social" ${p&&p.alcohol==='social'?'selected':''}>Consumo social</option>
+          <option value="frecuente" ${p&&p.alcohol==='frecuente'?'selected':''}>Frecuente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Antecedentes familiares</label><textarea id="mp-ant-fam" rows="2" placeholder="Diabetes, hipertensión, cáncer…">${p?p.antFam||'':''}</textarea></div>
+    <div class="form-group"><label>Antecedentes quirúrgicos</label><textarea id="mp-ant-qx" rows="2" placeholder="Cirugías previas, fecha aprox…">${p?p.antQx||'':''}</textarea></div>
     <div class="form-group"><label>Antecedentes / Observaciones generales</label><textarea id="mp-antecedentes" rows="2">${p?p.antecedentes||'':''}</textarea></div>
     ${editId?`
     <hr class="divider"/>
@@ -1698,6 +1758,12 @@ function savePaciente(editId){
     contra:document.getElementById('mp-contra')?.value.trim()||'',
     medicacion:document.getElementById('mp-medicacion')?.value.trim()||'',
     piel:document.getElementById('mp-piel')?.value||'',
+    ocupacion:document.getElementById('mp-ocupacion')?.value.trim()||'',
+    estadoCivil:document.getElementById('mp-estado-civil')?.value||'',
+    tabaco:document.getElementById('mp-tabaco')?.value||'',
+    alcohol:document.getElementById('mp-alcohol')?.value||'',
+    antFam:document.getElementById('mp-ant-fam')?.value.trim()||'',
+    antQx:document.getElementById('mp-ant-qx')?.value.trim()||'',
     antecedentes:document.getElementById('mp-antecedentes')?.value.trim()||'',
     fotos:existing.fotos||[],
     historiaClinica:existing.historiaClinica||[],
