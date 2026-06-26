@@ -270,7 +270,7 @@ async function confirmarTurnoConSena(sock, jid, paciente, num, horario, desc, mo
 
 // ─── ENVÍO REGISTRADO (para distinguir bot vs humano) ────────────────────────
 async function botSend(sock, jid, content) {
-  const sent = await botSend(sock, jid, content);
+  const sent = await sock.sendMessage(jid, content);
   if (sent?.key?.id) marcarMensajeBot(sent.key.id);
   return sent;
 }
