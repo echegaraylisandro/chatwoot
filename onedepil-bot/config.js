@@ -35,6 +35,8 @@ module.exports = {
     { nombre: 'Dr. Walter Antuña',    wa: '5492644983189@s.whatsapp.net', profId: 'p4' },
   ],
 
+  ALIAS_PAGO: 'ONE.DEPIL.NX',
+
   DATA_FILE: './data.json',
 
   CRON_RECORDATORIOS:   '0 10 * * *',       // recordatorios turnos — 10am todos los días
