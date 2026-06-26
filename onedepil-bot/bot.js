@@ -39,6 +39,66 @@ const ALTO_VALOR_KEYWORDS = [
 // Monto de consulta médica
 const PRECIO_CONSULTA = 40000;
 
+// Duración en minutos por tratamiento
+const DURACION = {
+  consulta: 30, depilacion: 60, botox: 45, endolift: 90, endymed: 60,
+  endyeyes: 45, hifu: 60, criolipolisis: 90, mesoterapia: 45, prp: 60,
+  limpieza: 60, peeling: 45, alquimia: 60, encurve: 45, cmslim: 45,
+  suero: 60, capilar: 45, masajes: 60, ginecologia: 30, endocrinologia: 30,
+};
+
+// Slots de trabajo por día de semana (0=Dom, 1=Lun ... 6=Sáb)
+const SLOTS_DIA = {
+  1: ['15:00','16:00','17:00','18:00','19:00','20:00'], // lunes
+  2: ['15:00','16:00','17:00','18:00','19:00','20:00'],
+  3: ['15:00','16:00','17:00','18:00','19:00','20:00'],
+  4: ['15:00','16:00','17:00','18:00','19:00','20:00'],
+  5: ['15:00','16:00','17:00','18:00','19:00','20:00'], // viernes
+  6: ['09:00','10:00','11:00','12:00','13:00','14:00'], // sábado
+};
+
+function getSlotsDisponibles(tratamiento, data, cantMax = 4) {
+  const durMin = DURACION[tratamiento] || 60;
+  const slotsLibres = [];
+  const ahora = new Date();
+
+  for (let dia = 1; dia <= 10 && slotsLibres.length < cantMax; dia++) {
+    const fecha = new Date(ahora);
+    fecha.setDate(ahora.getDate() + dia);
+    const dow = fecha.getDay(); // 0=dom
+    const slotsDelDia = SLOTS_DIA[dow];
+    if (!slotsDelDia) continue;
+
+    const fechaStr = fecha.toISOString().slice(0, 10);
+    const turnosDia = (data.turnos || []).filter(t => t.fecha === fechaStr);
+
+    for (const slot of slotsDelDia) {
+      const [h, m] = slot.split(':').map(Number);
+      // Ver si este slot choca con algún turno existente
+      const slotInicio = h * 60 + m;
+      const slotFin = slotInicio + durMin;
+      const ocupado = turnosDia.some(t => {
+        const [th, tm] = (t.hora || '00:00').split(':').map(Number);
+        const tInicio = th * 60 + tm;
+        const tDur = DURACION[t.tratamiento] || DURACION[t.servicio] || 60;
+        const tFin = tInicio + tDur;
+        return slotInicio < tFin && slotFin > tInicio;
+      });
+      // No ofrecer slots que ya pasaron hoy
+      if (!ocupado) {
+        const DIAS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+        slotsLibres.push({
+          fecha: fechaStr,
+          hora: slot,
+          label: `${DIAS_ES[dow]} ${fecha.getDate()}/${fecha.getMonth()+1} a las ${slot}hs`,
+        });
+        if (slotsLibres.length >= cantMax) break;
+      }
+    }
+  }
+  return slotsLibres;
+}
+
 // ─── INFO DE TRATAMIENTOS ─────────────────────────────────────────────────────
 const INFO_TRATAMIENTOS = {
   alquimia: `El Alquimia es un peeling médico de última generación que combina distintos activos en fases para renovar la piel de forma profunda y progresiva. Lo que más les gusta a las pacientes es que desde la primera sesión se nota un cambio real: la piel queda más luminosa, pareja, sin manchas y mucho más suave.
@@ -182,6 +242,16 @@ function saludoHora() {
   if (n < 20) return 'Buenas tardes';
   return 'Buenas noches';
 }
+// ─── CONFIRMAR TURNO Y PEDIR SEÑA ────────────────────────────────────────────
+async function confirmarTurnoConSena(sock, jid, paciente, num, horario, desc, monto) {
+  const montoTexto = fmtPeso(monto);
+  await sock.sendMessage(jid, {
+    text: `Perfecto, anotamos tu turno para *${desc}* — *${horario}*.\n\nPara reservar el lugar te pedimos una seña de *${montoTexto}*${desc.includes('Consulta') ? ' (se descuenta del tratamiento)' : ''}.\n\nTransferí al alias:\n*${cfg.ALIAS_PAGO}*\n\nY enviame el comprobante acá para confirmar. 😊`,
+  });
+  await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 ${desc}\n🗓️ ${horario}\n💰 Seña: ${montoTexto}\n⏳ Esperando comprobante`);
+  convState.set(jid, { step: 'esperando_comprobante', data: { desc, monto }, ts: Date.now() });
+}
+
 // ─── FLUJO DE PROSPECCIÓN ─────────────────────────────────────────────────────
 async function handleMessage(sock, msg) {
   const jid  = msg.key.remoteJid;
@@ -269,19 +339,57 @@ async function handleMessage(sock, msg) {
     return;
   }
 
-  // PASO: esperando día/hora para turno
+  // PASO: mostrar slots disponibles al paciente
   if (conv?.step === 'esperando_horario') {
     const { tratamiento, tipo } = conv.data;
     const esConsulta = tipo === 'consulta';
-    const monto = esConsulta ? PRECIO_CONSULTA : Math.round((conv.data.precio || 0) * 0.20);
+    const tratKey = esConsulta ? 'consulta' : (tratamiento || '').toLowerCase().split(' ')[0];
     const desc = esConsulta ? `Consulta con Dra. Sabrina Quiroga` : (tratamiento || 'el tratamiento');
-    const montoTexto = monto > 0 ? fmtPeso(monto) : null;
+    const monto = esConsulta ? PRECIO_CONSULTA : 40000;
 
-    await sock.sendMessage(jid, {
-      text: `Perfecto, anotamos tu solicitud para *${desc}* para el ${body}.\n\nPara confirmar y reservar el lugar, te pedimos una seña de *${montoTexto || '$40.000'}*${esConsulta ? ' (se descuenta del tratamiento cuando lo realizás)' : ''}.\n\nTransferí al alias:\n*${cfg.ALIAS_PAGO}*\n\nY enviame el comprobante acá para terminar de agendarte. 😊`,
-    });
-    await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 Tratamiento: ${desc}\n🗓️ Preferencia: "${body}"\n💰 Seña solicitada: ${montoTexto || '$40.000'}\n⏳ Esperando comprobante`);
-    setConv(jid, 'esperando_comprobante', { desc, monto: monto || 40000 });
+    const slots = getSlotsDisponibles(tratKey, data);
+    if (slots.length === 0) {
+      await sock.sendMessage(jid, {
+        text: `En este momento no tengo horarios disponibles en los próximos días para mostrarte. Escribime tu preferencia y lo coordinamos manualmente.`,
+      });
+      setConv(jid, 'esperando_slot_manual', { desc, monto, tratamiento });
+      return;
+    }
+
+    let txt = `Estos son los horarios disponibles para *${desc}*:\n\n`;
+    slots.forEach((s, i) => { txt += `*${i + 1}.* ${s.label}\n`; });
+    txt += `\nRespondé con el número de la opción que te queda mejor. 😊`;
+    await sock.sendMessage(jid, { text: txt });
+    setConv(jid, 'esperando_slot', { desc, monto, slots, tratamiento });
+    return;
+  }
+
+  // PASO: paciente eligió un slot
+  if (conv?.step === 'esperando_slot') {
+    const { desc, monto, slots } = conv.data;
+    const nB = normalize(body);
+    const idx = parseInt(body.trim()) - 1;
+    const slot = (idx >= 0 && idx < slots.length) ? slots[idx] : null;
+
+    if (!slot) {
+      // Intentar detectar si escribió un día/hora libre
+      const esDia = /lunes|martes|miercoles|jueves|viernes|sabado|\d{1,2}\/\d/.test(nB);
+      if (esDia) {
+        await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto);
+        return;
+      }
+      await sock.sendMessage(jid, { text: `Respondé con el número de la opción (1, 2, 3...) o escribí otro día y horario que te convenga.` });
+      return;
+    }
+
+    await confirmarTurnoConSena(sock, jid, paciente, num, `${slot.label}`, desc, monto);
+    return;
+  }
+
+  // PASO: horario libre escrito a mano
+  if (conv?.step === 'esperando_slot_manual') {
+    const { desc, monto } = conv.data;
+    await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto);
     return;
   }
 
@@ -428,11 +536,7 @@ async function handleMessage(sock, msg) {
     // Si el mensaje ya incluye día/hora ("agendame el martes a las 16"), ir directo al horario
     const tieneDia = /lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo|\d{1,2}\/\d{1,2}|\d{1,2}hs|a las \d/.test(normalize(body));
     if (tieneDia) {
-      await sock.sendMessage(jid, {
-        text: `Perfecto, anotamos tu solicitud para ${body}.\n\nPara reservar el lugar, te pedimos una seña de *$40.000*.\n\nTransferí al alias:\n*${cfg.ALIAS_PAGO}*\n\nY enviame el comprobante acá para terminar de agendarte. 😊`,
-      });
-      await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🗓️ Preferencia: "${body}"\n💰 Seña solicitada: $40.000\n⏳ Esperando comprobante`);
-      setConv(jid, 'esperando_comprobante', { desc: 'el turno solicitado', monto: 40000 });
+      await confirmarTurnoConSena(sock, jid, paciente, num, body, 'el turno solicitado', 40000);
     } else {
       await sock.sendMessage(jid, {
         text: `${saludoHora()}${nombre ? ' ' + nombre : ''}. ¿Qué tratamiento o consulta querés hacer?`,
