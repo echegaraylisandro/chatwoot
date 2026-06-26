@@ -272,10 +272,14 @@ async function handleMessage(sock, msg) {
 
   logConsulta(paciente?.nombre || '+' + num, num, body);
 
-  // ── INSULTOS / FRUSTRACIÓN EXTREMA (siempre) ────────────────────────────────
+  // ── FILTRO DE CONTENIDO INAPROPIADO (siempre, antes de todo) ────────────────
   const nMsg = normalize(body);
-  if (nMsg.includes('idiota') || nMsg.includes('imbecil') || nMsg.includes('estupid') || nMsg.includes('inutil')) {
-    await sock.sendMessage(jid, { text: `Entiendo tu frustración${nombre ? ' ' + nombre : ''}, disculpá las molestias. Dejame ayudarte directamente — ¿qué necesitás?` });
+  const palabrasInapropiadas = ['puta','mierda','idiota','imbecil','estupid','inutil','sexo','prostitut','porno','drogas','pedo','boludo','pelotud','concha','culo','pija','mogolico'];
+  if (palabrasInapropiadas.some(p => nMsg.includes(p))) {
+    await sock.sendMessage(jid, {
+      text: `Hola, soy Aldana de One Depil. Solo puedo ayudarte con consultas sobre nuestros tratamientos y turnos. ¿Te puedo orientar en algo?`,
+    });
+    clearConv(jid);
     return;
   }
 
@@ -453,12 +457,13 @@ async function handleMessage(sock, msg) {
       }
     } else if (esConsultaDirecta) {
       await sock.sendMessage(jid, {
-        text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
+        text: `Perfecto. Te muestro los horarios disponibles para una consulta con la Dra. Sabrina.`,
       });
       setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
     } else {
+      // No avanzar con texto sin sentido — ofrecer opciones concretas
       await sock.sendMessage(jid, {
-        text: `¿Podés contarme un poco más sobre qué querés hacer? Así te oriento al tratamiento ideal.`,
+        text: `Puedo ayudarte con:\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta médica (Dra. Sabrina, Ginecología, Endocrinología)\n• Precios e información\n\n¿Cuál te interesa?`,
       });
     }
     return;
@@ -580,30 +585,32 @@ async function handleMessage(sock, msg) {
 
   // PASO: recibimos nombre/DNI y buscamos en la base
   if (conv?.step === 'esperando_identificacion') {
-    // Buscar por teléfono (ya lo tenemos del JID) o por nombre ingresado
     const nombreIngresado = body.trim();
-    const encontrado = paciente || (data.pacientes || []).find(p =>
+    // Solo buscar si parece un nombre real (letras, mínimo 3 chars, sin palabras raras)
+    const pareceNombre = /^[a-záéíóúüñ\s]{3,}$/i.test(nombreIngresado) && nombreIngresado.split(' ').length >= 1;
+    if (!pareceNombre) {
+      await sock.sendMessage(jid, { text: `Necesito tu nombre y apellido para buscarte. ¿Me los decís?` });
+      return;
+    }
+
+    const encontrado = (data.pacientes || []).find(p =>
       normalize(p.nombre).includes(normalize(nombreIngresado)) ||
       (p.tel && p.tel.replace(/\D/g,'').includes(nombreIngresado.replace(/\D/g,'')))
     );
 
     if (encontrado) {
       const primerNombre = encontrado.nombre.split(' ')[0];
-      const tratamientosPrevios = encontrado.antecedentes || encontrado.notas || '';
-      const ventas = encontrado.ventas ? ` Historial de tratamientos en la clínica: $${Number(encontrado.ventas).toLocaleString('es-AR')}.` : '';
-
-      // Notificar al equipo que es paciente conocido
-      await notificarEquipo(sock, `👤 *Paciente reconocida/o*\n*${encontrado.nombre}* (+${num})\n📱 Tel registrado: ${encontrado.tel || '-'}${ventas}\n🔔 Está consultando por WhatsApp`);
+      const ventas = encontrado.ventas ? ` (historial: $${Number(encontrado.ventas).toLocaleString('es-AR')})` : '';
+      await notificarEquipo(sock, `👤 *Paciente reconocido*\n*${encontrado.nombre}* (+${num})${ventas}\n🔔 Consultando por WhatsApp`);
       const ultimoT = (data.turnos || []).filter(t => t.pacienteId === encontrado.id).sort((a,b) => new Date(b.fecha)-new Date(a.fecha))[0];
-      const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio || 'un tratamiento'}.` : '';
+      const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio}.` : '';
       await sock.sendMessage(jid, {
         text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?`,
       });
-      setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado, previos: tratamientosPrevios });
+      setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado });
     } else {
-      // Paciente nuevo
       await sock.sendMessage(jid, {
-        text: `${saludoHora()}${nombreIngresado ? ' ' + nombreIngresado : ''}, te habla Aldana de One Depil. Bienvenida/o. ¿Sobre qué tratamiento querés consultar?`,
+        text: `${saludoHora()}, soy Aldana de One Depil. No encuentro ese nombre en el sistema, pero con gusto te ayudo. ¿Sobre qué tratamiento querés consultar?`,
       });
       setConv(jid, 'esperando_tratamiento', { nombreIngresado });
     }
