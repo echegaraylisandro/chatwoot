@@ -258,19 +258,26 @@ async function handleMessage(sock, msg) {
   if (!jid || jid.endsWith('@g.us')) return;
 
   const body = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
-  if (!body) return;
+  const tieneImagen = !!(msg.message?.imageMessage || msg.message?.documentMessage);
+  if (!body && !tieneImagen) return;
 
-  const n   = normalize(body);
   const num = jid.replace('@s.whatsapp.net', '');
+  const data = loadData();
 
-  const data     = loadData();
-  const paciente = (data.pacientes || []).find(p => p.tel && p.tel.replace(/\D/g, '').endsWith(num.slice(-8)));
-  const nombre   = paciente?.nombre?.split(' ')[0] || '';
+  // Paciente por teléfono O por nombre guardado en conv
+  const conv = getConv(jid);
+  let paciente = (data.pacientes || []).find(p => p.tel && p.tel.replace(/\D/g, '').endsWith(num.slice(-8)));
+  if (!paciente && conv?.data?.pacienteEncontrado) paciente = conv.data.pacienteEncontrado;
+  const nombre = paciente?.nombre?.split(' ')[0] || conv?.data?.nombreIngresado?.split(' ')[0] || '';
 
-  // Loguear para reporte
   logConsulta(paciente?.nombre || '+' + num, num, body);
 
-  const conv = getConv(jid);
+  // ── INSULTOS / FRUSTRACIÓN EXTREMA (siempre) ────────────────────────────────
+  const nMsg = normalize(body);
+  if (nMsg.includes('idiota') || nMsg.includes('imbecil') || nMsg.includes('estupid') || nMsg.includes('inutil')) {
+    await sock.sendMessage(jid, { text: `Entiendo tu frustración${nombre ? ' ' + nombre : ''}, disculpá las molestias. Dejame ayudarte directamente — ¿qué necesitás?` });
+    return;
+  }
 
   // ── CONFIRMACIÓN DE TURNO ────────────────────────────────────────────────────
   if (matchesAny(body, cfg.KEYWORDS.confirmar)) {
@@ -296,16 +303,6 @@ async function handleMessage(sock, msg) {
     await sock.sendMessage(jid, { text: `No hay problema${nombre ? ' ' + nombre : ''}, cuando puedas coordinar avisame y te busco un turno.` });
     await notificarEquipo(sock, `⚠️ *Cancelación*\n👤 ${paciente?.nombre || '+' + num}\nMensaje: "${body}"`);
     clearConv(jid);
-    return;
-  }
-
-  // ── HORARIO / UBICACIÓN ──────────────────────────────────────────────────────
-  if (matchesAny(body, cfg.KEYWORDS.horario)) {
-    await sock.sendMessage(jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en el ${cfg.CLINICA.direccion}. ¿Te gustaría que coordinemos un turnito?` });
-    return;
-  }
-  if (matchesAny(body, cfg.KEYWORDS.ubicacion)) {
-    await sock.sendMessage(jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan. Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs. ¿Te gustaría que coordinemos un turnito?` });
     return;
   }
 
@@ -372,13 +369,13 @@ async function handleMessage(sock, msg) {
     const slot = (idx >= 0 && idx < slots.length) ? slots[idx] : null;
 
     if (!slot) {
-      // Intentar detectar si escribió un día/hora libre
-      const esDia = /lunes|martes|miercoles|jueves|viernes|sabado|\d{1,2}\/\d/.test(nB);
-      if (esDia) {
+      // Cualquier texto que no sea un número se trata como horario libre escrito
+      const esDia = /lunes|martes|miercoles|jueves|viernes|sabado|\d{1,2}\/\d|\d{1,2}hs|a las \d|mismo horario|misma hora/.test(nB);
+      if (esDia || body.trim().length > 5) {
         await confirmarTurnoConSena(sock, jid, paciente, num, body, desc, monto);
         return;
       }
-      await sock.sendMessage(jid, { text: `Respondé con el número de la opción (1, 2, 3...) o escribí otro día y horario que te convenga.` });
+      await sock.sendMessage(jid, { text: `Respondé con el número de la opción (1, 2, 3...) o escribí el día y hora que te convenga.` });
       return;
     }
 
@@ -526,37 +523,56 @@ async function handleMessage(sock, msg) {
     return;
   }
 
-  // ── INICIO DEL FLUJO (saludo o primer mensaje) ───────────────────────────────
+  // ── INICIO DEL FLUJO (saludo o primer mensaje sin conversación activa) ────────
   const esSaludo = matchesAny(body, cfg.KEYWORDS.saludo);
   const quiereTurno = matchesAny(body, cfg.KEYWORDS.turno);
   const quierePrecios = matchesAny(body, cfg.KEYWORDS.precios);
   const quiereServicios = matchesAny(body, cfg.KEYWORDS.servicios);
+  const nB2 = normalize(body);
+  const loMismoSinConv = nB2.includes('lo mismo') || nB2.includes('mismo de siempre') || nB2.includes('lo de siempre');
 
-  if (quiereTurno) {
-    // Si el mensaje ya incluye día/hora ("agendame el martes a las 16"), ir directo al horario
-    const tieneDia = /lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo|\d{1,2}\/\d{1,2}|\d{1,2}hs|a las \d/.test(normalize(body));
+  // Horario y ubicación solo cuando no hay flujo activo
+  if (!conv && matchesAny(body, cfg.KEYWORDS.horario)) {
+    await sock.sendMessage(jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en el ${cfg.CLINICA.direccion}. ¿Te gustaría que coordinemos un turno?` });
+    return;
+  }
+  if (!conv && matchesAny(body, cfg.KEYWORDS.ubicacion)) {
+    await sock.sendMessage(jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan. Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.` });
+    return;
+  }
+
+  if (quiereTurno || loMismoSinConv) {
+    // "lo mismo de siempre" con paciente conocido
+    if (loMismoSinConv && paciente) {
+      const ultimoTurno = (data.turnos || [])
+        .filter(t => t.pacienteId === paciente.id && t.servicio)
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+      if (ultimoTurno) {
+        await sock.sendMessage(jid, { text: `Perfecto${nombre ? ' ' + nombre : ''}, te busco turno para *${ultimoTurno.servicio}* como la última vez.` });
+        setConv(jid, 'esperando_horario', { tratamiento: ultimoTurno.servicio });
+        return;
+      }
+    }
+    // Mensaje con día/hora incluido
+    const tieneDia = /lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|\d{1,2}\/\d{1,2}|\d{1,2}hs|a las \d/.test(nB2);
     if (tieneDia) {
       await confirmarTurnoConSena(sock, jid, paciente, num, body, 'el turno solicitado', 40000);
     } else {
-      await sock.sendMessage(jid, {
-        text: `${saludoHora()}${nombre ? ' ' + nombre : ''}. ¿Qué tratamiento o consulta querés hacer?`,
-      });
+      await sock.sendMessage(jid, { text: `${nombre ? nombre + ', ¿q' : '¿Q'}ué tratamiento o consulta querés hacer?` });
       setConv(jid, 'esperando_tratamiento');
     }
     return;
   }
 
   if (quierePrecios) {
-    await sock.sendMessage(jid, {
-      text: `Los valores dependen del tratamiento y la zona. ¿Sobre qué tratamiento querés consultar?`,
-    });
+    await sock.sendMessage(jid, { text: `Los valores dependen del tratamiento. ¿Sobre cuál querés consultar?` });
     setConv(jid, 'esperando_tratamiento');
     return;
   }
 
   if (quiereServicios) {
     await sock.sendMessage(jid, {
-      text: `Hacemos depilación definitiva con láser Monolith Mediostar, Botox, Endolift, Endymed Intensif+FSR, EndyEyes, HIFU, Criolipolisis, Mesoterapia, PRP, Peeling, Alquimia, Limpiezas faciales, Suero terapias y también Ginecología y Descenso de peso. ¿Hay alguno en particular que te interesa?`,
+      text: `Hacemos depilación láser Mediostar, Botox, Endolift, Endymed, HIFU, Criolipolisis, Mesoterapia, PRP, Peeling, Alquimia, Limpiezas faciales, Suero terapias, enCurve, CM Slim, y también Ginecología y Endocrinología. ¿Hay alguno en particular que te interesa?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -578,9 +594,10 @@ async function handleMessage(sock, msg) {
 
       // Notificar al equipo que es paciente conocido
       await notificarEquipo(sock, `👤 *Paciente reconocida/o*\n*${encontrado.nombre}* (+${num})\n📱 Tel registrado: ${encontrado.tel || '-'}${ventas}\n🔔 Está consultando por WhatsApp`);
-
+      const ultimoT = (data.turnos || []).filter(t => t.pacienteId === encontrado.id).sort((a,b) => new Date(b.fecha)-new Date(a.fecha))[0];
+      const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio || 'un tratamiento'}.` : '';
       await sock.sendMessage(jid, {
-        text: `${saludoHora()} ${primerNombre}, te habla Aldana de One Depil.${tratamientosPrevios ? ' Vi que ya estuviste con nosotros.' : ''} ¿En qué te puedo ayudar?`,
+        text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?`,
       });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado, previos: tratamientosPrevios });
     } else {
@@ -594,16 +611,19 @@ async function handleMessage(sock, msg) {
   }
 
   if (esSaludo || !conv) {
-    // Si ya lo reconocemos por teléfono, saltamos la identificación
     if (paciente) {
       const primerNombre = paciente.nombre.split(' ')[0];
+      const ultimoTurno = (data.turnos || [])
+        .filter(t => t.pacienteId === paciente.id)
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+      const historial = ultimoTurno ? ` Veo que tu última visita fue para ${ultimoTurno.servicio || 'un tratamiento'}.` : '';
       await sock.sendMessage(jid, {
-        text: `${saludoHora()} ${primerNombre}, te habla Aldana de One Depil. ¿En qué te puedo ayudar?`,
+        text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historial} ¿En qué te puedo ayudar hoy?`,
       });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: paciente });
     } else {
       await sock.sendMessage(jid, {
-        text: `${saludoHora()}, te habla Aldana de One Depil. ¿Me decís tu nombre y apellido para buscarte en nuestro sistema?`,
+        text: `${saludoHora()}, soy Aldana, coordinadora de One Depil — clínica médico-estética. ¿Me decís tu nombre y apellido para verificar si ya tenés historial con nosotros?`,
       });
       setConv(jid, 'esperando_identificacion');
     }
