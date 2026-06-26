@@ -285,21 +285,21 @@ async function handleMessage(sock, msg) {
     return;
   }
 
-  // PASO: esperando si ya hizo tratamientos previos
-  if (conv?.step === 'esperando_previos') {
+  // PASO: esperando confirmación para arrancar con consulta (alto valor)
+  if (conv?.step === 'esperando_confirmacion_consulta') {
     const { tratamiento } = conv.data;
-    const tuvoPrevios = matchesAny(body, ['si','sí','ya me hice','hice','realize','realice','tuve','me hice']);
-    setConv(jid, 'esperando_horario', { previos: body });
-
-    if (esAltoValor(tratamiento)) {
+    const nB = normalize(body);
+    const confirma = matchesAny(body, ['si','sí','dale','ok','bueno','claro','perfecto','quiero','me interesa','coordina','agendame']);
+    if (confirma) {
       await sock.sendMessage(jid, {
-        text: `Comprendo. Para ese tratamiento te recomiendo arrancar con una consulta con la Dra. Sabrina para que evalúe tu caso y te arme el protocolo ideal. El valor de la consulta es $40.000 y ese monto se descuenta del tratamiento cuando lo realizás. ¿Qué día y horario te queda bien? Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.`,
+        text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
       });
-      setConv(jid, 'esperando_horario', { previos: body, tipo: 'consulta', precio: PRECIO_CONSULTA });
+      setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
     } else {
       await sock.sendMessage(jid, {
-        text: `Perfecto${nombre ? ' ' + nombre : ''}. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
+        text: `No hay problema. Si en algún momento querés coordinar la valoración, escribime y lo armamos. ¿Hay algo más en lo que te pueda ayudar?`,
       });
+      clearConv(jid);
     }
     return;
   }
@@ -308,11 +308,44 @@ async function handleMessage(sock, msg) {
   if (conv?.step === 'esperando_tratamiento') {
     const trat = detectarTratamiento(body);
     const nB = normalize(body);
-    const esConsultaDirecta = nB.includes('consulta') || nB.includes('sabrina') || nB.includes('turno') || nB.includes('agend');
+
+    // Paciente conocido dice "lo mismo de siempre"
+    const loMismo = nB.includes('lo mismo') || nB.includes('mismo de siempre') || nB.includes('lo habitual') || nB.includes('lo de siempre');
+    if (loMismo && paciente) {
+      const ultimoTurno = (data.turnos || [])
+        .filter(t => t.pacienteId === paciente.id && t.servicio)
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+      if (ultimoTurno) {
+        await sock.sendMessage(jid, {
+          text: `Entendido${nombre ? ' ' + nombre : ''}, turno para *${ultimoTurno.servicio}* como la última vez. ¿Qué día y horario te queda bien? Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.`,
+        });
+        setConv(jid, 'esperando_horario', { tratamiento: ultimoTurno.servicio });
+      } else {
+        await sock.sendMessage(jid, {
+          text: `Claro${nombre ? ' ' + nombre : ''}, ¿podés decirme qué tratamiento querés? No tengo registrado el último para buscártelo rápido.`,
+        });
+      }
+      return;
+    }
+
+    // Detección de frustración o confusión
+    const estaConfundido = nB.includes('como') || nB.includes('no sabes') || nB.includes('no entiendo') || nB.includes('que') && body.endsWith('?') && body.length < 15;
+    if (estaConfundido && !trat) {
+      await sock.sendMessage(jid, {
+        text: `Disculpá la confusión. Para agilizar, ¿cuál de estos querés?\n\n• Depilación láser\n• Tratamiento facial (Endolift, Botox, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta con la Dra. Sabrina\n• Otra consulta`,
+      });
+      return;
+    }
+
+    const esConsultaDirecta = nB.includes('consulta') || nB.includes('sabrina') || nB.includes('agend');
 
     if (trat && INFO_TRATAMIENTOS[trat]) {
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[trat] });
-      setConv(jid, 'esperando_previos', { tratamiento: trat });
+      if (esAltoValor(trat)) {
+        setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: trat });
+      } else {
+        setConv(jid, 'esperando_horario', { tratamiento: trat });
+      }
     } else if (esConsultaDirecta) {
       await sock.sendMessage(jid, {
         text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
@@ -320,9 +353,8 @@ async function handleMessage(sock, msg) {
       setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
     } else {
       await sock.sendMessage(jid, {
-        text: `Contame un poco más — ¿qué es lo que querés mejorar o tratar? Así te oriento mejor.`,
+        text: `¿Podés contarme un poco más sobre qué querés hacer? Así te oriento al tratamiento ideal.`,
       });
-      setConv(jid, 'esperando_previos', { tratamiento: body.slice(0, 50) });
     }
     return;
   }
@@ -372,7 +404,11 @@ async function handleMessage(sock, msg) {
   if (tratamientoDirecto) {
     if (INFO_TRATAMIENTOS[tratamientoDirecto]) {
       await sock.sendMessage(jid, { text: INFO_TRATAMIENTOS[tratamientoDirecto] });
-      setConv(jid, 'esperando_previos', { tratamiento: tratamientoDirecto });
+      if (esAltoValor(tratamientoDirecto)) {
+        setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: tratamientoDirecto });
+      } else {
+        setConv(jid, 'esperando_horario', { tratamiento: tratamientoDirecto });
+      }
     } else {
       await sock.sendMessage(jid, {
         text: `${saludoHora()}${nombre ? ' ' + nombre : ''}, te habla Aldana de One Depil. Consultame lo que necesitás que te ayudo.`,
