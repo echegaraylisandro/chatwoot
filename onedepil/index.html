@@ -946,8 +946,10 @@ const DEFAULT_SERVICIOS = [
   {id:'dhc2',   nombre:'Combo Depil. Hombre 2 (Tor+Abd+Pierna)',precio:53000,precioC:53000,cat:'depilacion'},
   {id:'dhc3',   nombre:'Combo Depil. Hombre 3 (Tor+Abd+Ax+Pierna)',precio:70000,precioC:70000,cat:'depilacion'},
   // MÉDICO (consultas)
-  {id:'s_gine', nombre:'Consulta Ginecológica',          precio:90000,  precioC:80000,  cat:'gine'},
-  {id:'s_endo', nombre:'Consulta Endocrinológica',       precio:95000,  precioC:85000,  cat:'endo'},
+  {id:'s_cons_sab', nombre:'Consulta Estética Gral. — Dra. Sabrina',precio:40000,precioC:35000,cat:'estetica'},
+  {id:'s_cons_est', nombre:'Consulta Estética Médica — Dr. Ribaudo', precio:40000,precioC:35000,cat:'medico'},
+  {id:'s_gine', nombre:'Consulta Ginecológica — Dr. Echegaray',      precio:40000,  precioC:35000,  cat:'gine'},
+  {id:'s_endo', nombre:'Consulta Endocrinológica — Dra. Otiñano',    precio:40000,  precioC:35000,  cat:'endo'},
   {id:'s_des',  nombre:'Terapia Descenso de Peso',       precio:130000, precioC:120000, cat:'endo'},
   {id:'s_sue',  nombre:'Suero Terapia',                  precio:85000,  precioC:75000,  cat:'suero'},
 ];
@@ -3031,21 +3033,42 @@ async function autoImportKoibox() {
 
 function migrarServicios() {
   // Agrega servicios nuevos que falten en localStorage sin tocar los existentes
-  const idsActuales = new Set(STATE.servicios.map(s => s.id));
+  // También actualiza nombre y precio de servicios existentes que hayan cambiado
+  const idsActuales = new Map(STATE.servicios.map(s => [s.id, s]));
   let cambios = false;
   DEFAULT_SERVICIOS.forEach(svc => {
-    if (!idsActuales.has(svc.id)) {
+    const existente = idsActuales.get(svc.id);
+    if (!existente) {
       STATE.servicios.push(svc);
+      cambios = true;
+    } else if (existente.precio !== svc.precio || existente.nombre !== svc.nombre) {
+      Object.assign(existente, { nombre: svc.nombre, precio: svc.precio, precioC: svc.precioC, cat: svc.cat });
       cambios = true;
     }
   });
   if (cambios) { lsSet('od_servicios', STATE.servicios); console.log('[migración] Servicios actualizados'); }
 }
 
+function migrarProfs() {
+  // Actualiza colores y campos faltantes de profesionales en localStorage
+  const defaultMap = new Map(DEFAULT_PROFS.map(p => [p.id, p]));
+  let cambios = false;
+  STATE.profs.forEach(p => {
+    const def = defaultMap.get(p.id);
+    if (def && (!p.color || p.color === '#666')) { p.color = def.color; cambios = true; }
+    if (def && !p.esp) { p.esp = def.esp; cambios = true; }
+  });
+  // Agregar profes nuevos que no estén en localStorage
+  const idsActuales = new Set(STATE.profs.map(p => p.id));
+  DEFAULT_PROFS.forEach(p => { if (!idsActuales.has(p.id)) { STATE.profs.push(p); cambios = true; } });
+  if (cambios) { lsSet('od_profs', STATE.profs); console.log('[migración] Profesionales actualizados'); }
+}
+
 async function init() {
   await autoImportKoibox();
   repararProfIds();
   migrarServicios();
+  migrarProfs();
   try{renderInicio()}catch(e){console.error(e)}
 }
 

@@ -178,6 +178,10 @@ Tenemos distintos protocolos según el objetivo: tonificación, volumen o reducc
   endocrinologia: `La Dra. Laura Otiñano atiende consultas de endocrinología y descenso de peso. Si tenés algo que ver con metabolismo, tiroides, diabetes, o simplemente querés bajar de peso con un seguimiento médico, ella es la indicada.
 
 ¿Querés que coordinemos una consulta?`,
+
+  estetica: `El Dr. Rolando Ribaudo atiende consultas de estética médica en la clínica — evaluación de tratamientos, indicación de procedimientos y seguimiento general. Es el indicado para una primera valoración si no sabés por dónde empezar o necesitás orientación médica.
+
+¿Querés que coordinemos una consulta?`,
 };
 
 // ─── KEYWORDS DE TRATAMIENTOS ─────────────────────────────────────────────────
@@ -202,6 +206,7 @@ function detectarTratamiento(msg) {
   if (n.includes('masaje')) return 'masajes';
   if (n.includes('ginecolog') || n.includes('gineco')) return 'ginecologia';
   if (n.includes('endocrinolog') || n.includes('descenso de peso') || n.includes('adelgazar') || n.includes('bajar de peso')) return 'endocrinologia';
+  if (n.includes('ribaudo') || n.includes('estetica medica') || n.includes('consulta estetica') || n.includes('consulta medica')) return 'estetica';
   return null;
 }
 
@@ -480,14 +485,19 @@ async function handleMessage(sock, msg) {
     const estaConfundido = nB.includes('como') || nB.includes('no sabes') || nB.includes('no entiendo') || nB.includes('que') && body.endsWith('?') && body.length < 15;
     if (estaConfundido && !trat) {
       await botSend(sock, jid, {
-        text: `Disculpá la confusión. Para agilizar, ¿cuál de estos querés?\n\n• Depilación láser\n• Tratamiento facial (Endolift, Botox, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta con la Dra. Sabrina\n• Otra consulta`,
+        text: `Disculpá la confusión. Para agilizar, ¿cuál de estos querés?\n\n• Depilación láser\n• Tratamiento facial (Endolift, Botox, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta estética — Dra. Sabrina Quiroga\n• Consulta estética médica — Dr. Rolando Ribaudo\n• Consulta ginecológica — Dr. Andrés Echegaray\n• Consulta endocrinológica / descenso de peso — Dra. Laura Otiñano\n• Sueroterapia — Dr. Walter Antuña`,
       });
       return;
     }
 
     const esConsultaDirecta = nB.includes('consulta') || nB.includes('sabrina') || nB.includes('agend');
 
-    if (trat && INFO_TRATAMIENTOS[trat]) {
+    // Especialidades médicas van directo a agendar (no pasan por alto valor)
+    const ESPECIALIDADES = ['ginecologia','endocrinologia','estetica','suero'];
+    if (trat && ESPECIALIDADES.includes(trat)) {
+      await botSend(sock, jid, { text: INFO_TRATAMIENTOS[trat] });
+      setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: trat });
+    } else if (trat && INFO_TRATAMIENTOS[trat]) {
       await botSend(sock, jid, { text: INFO_TRATAMIENTOS[trat] });
       if (esAltoValor(trat)) {
         setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: trat });
@@ -502,7 +512,7 @@ async function handleMessage(sock, msg) {
     } else {
       // No avanzar con texto sin sentido — ofrecer opciones concretas
       await botSend(sock, jid, {
-        text: `Puedo ayudarte con:\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta médica (Dra. Sabrina, Ginecología, Endocrinología)\n• Precios e información\n\n¿Cuál te interesa?`,
+        text: `Puedo ayudarte con:\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas (Dra. Sabrina, Dr. Ribaudo, Ginecología, Endocrinología, Sueroterapia)\n• Precios e información\n\n¿Cuál te interesa?`,
       });
     }
     return;
