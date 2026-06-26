@@ -347,8 +347,10 @@ async function handleMessage(sock, msg) {
     const tratKey = esConsulta ? 'consulta' : (tratamiento || '').toLowerCase();
     // Especialidades médicas — doctor asignado
     const ESPECIALIDAD_PROF = {
-      ginecologia:    { desc: 'Consulta ginecológica — Dr. Andrés Echegaray', profId: 'p2' },
-      endocrinologia: { desc: 'Consulta endocrinológica — Dra. Laura Otiñano', profId: 'p5' },
+      ginecologia:    { desc: 'Consulta ginecológica — Dr. Andrés Echegaray',      profId: 'p2' },
+      endocrinologia: { desc: 'Consulta endocrinológica — Dra. Laura Otiñano',     profId: 'p5' },
+      suero:          { desc: 'Sueroterapia — Dr. Walter Antuña',                  profId: 'p4' },
+      estetica:       { desc: 'Consulta estética médica — Dr. Rolando Ribaudo',    profId: 'p3' },
     };
     const espProf = ESPECIALIDAD_PROF[tratamiento];
     const desc = espProf ? espProf.desc : esConsulta ? `Consulta con Dra. Sabrina Quiroga` : (tratamiento || 'el tratamiento');
@@ -411,7 +413,7 @@ async function handleMessage(sock, msg) {
       await sock.sendMessage(jid, {
         text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
       });
-      setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
+      setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento });
     } else {
       await sock.sendMessage(jid, {
         text: `No hay problema. Si en algún momento querés coordinar la valoración, escribime y lo armamos. ¿Hay algo más en lo que te pueda ayudar?`,

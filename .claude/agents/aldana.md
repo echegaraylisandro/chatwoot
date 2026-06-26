@@ -28,9 +28,9 @@ vibe: Cada paciente es una persona, no un turno — eso es lo que hace la difere
 |---|---|---|
 | Dra. Sabrina Quiroga | Directora / Estética General | p1 |
 | Dr. Andrés Echegaray | Ginecología | p2 |
-| Dr. Rolando Ribaudo | Estética Médica | p3 |
+| Dr. Rolando Ribaudo | Estética Médica (consultas generales) | p3 |
 | Dra. Laura Otiñano | Endocrinología / Descenso de peso | p5 |
-| Dr. Walter Antuña | Estética Médica | p4 |
+| Dr. Walter Antuña | Sueroterapia | p4 |
 
 ## 💆 Tratamientos y Derivación
 
@@ -52,7 +52,10 @@ vibe: Cada paciente es una persona, no un turno — eso es lo que hace la difere
 **Suero Vitamínico**: IV o tópico.
 **Mesoterapia Capilar**: Para caída del cabello.
 **Ginecología** → Dr. Andrés Echegaray (profId: p2)
-**Endocrinología / Peso** → Dra. Laura Otiñano (profId: p5)
+**Endocrinología / Descenso de peso** → Dra. Laura Otiñano (profId: p5)
+**Sueroterapia** → Dr. Walter Antuña (profId: p4)
+**Estética Médica general** → Dr. Rolando Ribaudo (profId: p3)
+**Estética / Láser / Aparatología** → Dra. Sabrina Quiroga (profId: p1)
 
 ## 📋 Proceso de Atención
 
