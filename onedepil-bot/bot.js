@@ -200,8 +200,8 @@ function detectarTratamiento(msg) {
   if (n.includes('encurve') || n.includes('en curve')) return 'encurve';
   if (n.includes('cmslim') || n.includes('cm slim') || n.includes('electro') || n.includes('slim')) return 'cmslim';
   if (n.includes('masaje')) return 'masajes';
-  if (n.includes('ginecolog') || n.includes('echegaray') || n.includes('gineco')) return 'ginecologia';
-  if (n.includes('endocrinolog') || n.includes('otinano') || n.includes('otiñano') || n.includes('descenso de peso') || n.includes('adelgazar') || n.includes('bajar de peso')) return 'endocrinologia';
+  if (n.includes('ginecolog') || n.includes('gineco')) return 'ginecologia';
+  if (n.includes('endocrinolog') || n.includes('descenso de peso') || n.includes('adelgazar') || n.includes('bajar de peso')) return 'endocrinologia';
   return null;
 }
 
@@ -509,7 +509,34 @@ async function handleMessage(sock, msg) {
     return;
   }
 
-  // ── DETECCIÓN DE TRATAMIENTO (siempre tiene prioridad) ──────────────────────
+  // ── IDENTIFICACIÓN DE NOMBRE (antes de detectar tratamientos) ───────────────
+  if (conv?.step === 'esperando_identificacion') {
+    const nombreIngresado = body.trim();
+    const pareceNombre = /^[a-záéíóúüñ\s]{3,}$/i.test(nombreIngresado);
+    if (!pareceNombre) {
+      await sock.sendMessage(jid, { text: `Necesito tu nombre y apellido para buscarte. ¿Me los decís?` });
+      return;
+    }
+    const encontrado = (data.pacientes || []).find(p =>
+      normalize(p.nombre).includes(normalize(nombreIngresado)) ||
+      (p.tel && p.tel.replace(/\D/g,'').includes(nombreIngresado.replace(/\D/g,'')))
+    );
+    if (encontrado) {
+      const primerNombre = encontrado.nombre.split(' ')[0];
+      const ventas = encontrado.ventas ? ` (historial: $${Number(encontrado.ventas).toLocaleString('es-AR')})` : '';
+      await notificarEquipo(sock, `👤 *Paciente reconocido*\n*${encontrado.nombre}* (+${num})${ventas}\n🔔 Consultando por WhatsApp`);
+      const ultimoT = (data.turnos || []).filter(t => t.pacienteId === encontrado.id).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))[0];
+      const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio}.` : '';
+      await sock.sendMessage(jid, { text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?` });
+      setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado });
+    } else {
+      await sock.sendMessage(jid, { text: `${saludoHora()}, soy Aldana de One Depil. No te encuentro en el sistema, pero te ayudo igual. ¿Sobre qué tratamiento querés consultar?` });
+      setConv(jid, 'esperando_tratamiento', { nombreIngresado });
+    }
+    return;
+  }
+
+  // ── DETECCIÓN DE TRATAMIENTO ──────────────────────────────────────────────
   const tratamientoDirecto = detectarTratamiento(body);
   if (tratamientoDirecto) {
     if (INFO_TRATAMIENTOS[tratamientoDirecto]) {
@@ -583,39 +610,6 @@ async function handleMessage(sock, msg) {
     return;
   }
 
-  // PASO: recibimos nombre/DNI y buscamos en la base
-  if (conv?.step === 'esperando_identificacion') {
-    const nombreIngresado = body.trim();
-    // Solo buscar si parece un nombre real (letras, mínimo 3 chars, sin palabras raras)
-    const pareceNombre = /^[a-záéíóúüñ\s]{3,}$/i.test(nombreIngresado) && nombreIngresado.split(' ').length >= 1;
-    if (!pareceNombre) {
-      await sock.sendMessage(jid, { text: `Necesito tu nombre y apellido para buscarte. ¿Me los decís?` });
-      return;
-    }
-
-    const encontrado = (data.pacientes || []).find(p =>
-      normalize(p.nombre).includes(normalize(nombreIngresado)) ||
-      (p.tel && p.tel.replace(/\D/g,'').includes(nombreIngresado.replace(/\D/g,'')))
-    );
-
-    if (encontrado) {
-      const primerNombre = encontrado.nombre.split(' ')[0];
-      const ventas = encontrado.ventas ? ` (historial: $${Number(encontrado.ventas).toLocaleString('es-AR')})` : '';
-      await notificarEquipo(sock, `👤 *Paciente reconocido*\n*${encontrado.nombre}* (+${num})${ventas}\n🔔 Consultando por WhatsApp`);
-      const ultimoT = (data.turnos || []).filter(t => t.pacienteId === encontrado.id).sort((a,b) => new Date(b.fecha)-new Date(a.fecha))[0];
-      const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio}.` : '';
-      await sock.sendMessage(jid, {
-        text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?`,
-      });
-      setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado });
-    } else {
-      await sock.sendMessage(jid, {
-        text: `${saludoHora()}, soy Aldana de One Depil. No encuentro ese nombre en el sistema, pero con gusto te ayudo. ¿Sobre qué tratamiento querés consultar?`,
-      });
-      setConv(jid, 'esperando_tratamiento', { nombreIngresado });
-    }
-    return;
-  }
 
   if (esSaludo || !conv) {
     if (paciente) {
