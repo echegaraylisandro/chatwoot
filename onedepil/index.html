@@ -1582,7 +1582,12 @@ function closeModal(){document.getElementById('modal-overlay').classList.remove(
 function openModalTurno(editId){
   const t=editId?STATE.turnos.find(x=>x.id===editId):null;
   const profOptions=STATE.profs.map(p=>`<option value="${p.id}" ${t&&t.profId===p.id?'selected':''}>${p.nombre} — ${p.esp}</option>`).join('');
-  const svcOptions=STATE.servicios.map(s=>`<option value="${s.id}" ${t&&t.svcId===s.id?'selected':''}>${s.nombre} — ${fmtPeso(s.precio)}</option>`).join('');
+  const CAT_LABELS = { estetica:'Estética', medico:'Médico / Inyectable', corporal:'Corporal', depilacion:'Depilación', suero:'Sueroterapia', gine:'Ginecología', endo:'Endocrinología' };
+  const svcPorCat = {};
+  STATE.servicios.forEach(s => { const c = s.cat||'otros'; if(!svcPorCat[c])svcPorCat[c]=[]; svcPorCat[c].push(s); });
+  const svcOptions = Object.entries(svcPorCat).map(([cat,svcs])=>
+    `<optgroup label="${CAT_LABELS[cat]||cat}">${svcs.map(s=>`<option value="${s.id}" ${t&&t.svcId===s.id?'selected':''}>${s.nombre} — ${fmtPeso(s.precio)}</option>`).join('')}</optgroup>`
+  ).join('');
   const pacOptions=STATE.pacientes.map(p=>`<option value="${p.id}" ${t&&t.pacienteId===p.id?'selected':''}>${p.nombre}</option>`).join('');
 
   openModal(editId?'Editar Turno':'Nuevo Turno',`
@@ -3024,9 +3029,23 @@ async function autoImportKoibox() {
   return importado;
 }
 
+function migrarServicios() {
+  // Agrega servicios nuevos que falten en localStorage sin tocar los existentes
+  const idsActuales = new Set(STATE.servicios.map(s => s.id));
+  let cambios = false;
+  DEFAULT_SERVICIOS.forEach(svc => {
+    if (!idsActuales.has(svc.id)) {
+      STATE.servicios.push(svc);
+      cambios = true;
+    }
+  });
+  if (cambios) { lsSet('od_servicios', STATE.servicios); console.log('[migración] Servicios actualizados'); }
+}
+
 async function init() {
   await autoImportKoibox();
   repararProfIds();
+  migrarServicios();
   try{renderInicio()}catch(e){console.error(e)}
 }
 
