@@ -940,17 +940,23 @@ async function conectar() {
     }
   });
 
+  const BOT_START_TS = Math.floor(Date.now() / 1000); // timestamp de arranque en segundos
+
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
     for (const msg of messages) {
       const jid = msg.key.remoteJid;
       if (!jid || jid.endsWith('@g.us')) continue;
 
+      // Ignorar mensajes históricos anteriores al arranque del bot
+      const msgTs = msg.messageTimestamp || 0;
+      if (Number(msgTs) < BOT_START_TS) continue;
+
       // Mensaje saliente: determinar si lo envió el bot o un humano
       if (msg.key.fromMe) {
         const msgId = msg.key.id;
         if (botMsgIds.has(msgId)) {
-          botMsgIds.delete(msgId); // ya procesado
+          botMsgIds.delete(msgId);
         } else {
           // Mensaje enviado manualmente por el operador humano
           humanoCargo(jid);
