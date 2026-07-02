@@ -101,87 +101,85 @@ function getSlotsDisponibles(tratamiento, data, cantMax = 4) {
 
 // ─── INFO DE TRATAMIENTOS ─────────────────────────────────────────────────────
 const INFO_TRATAMIENTOS = {
-  alquimia: `El Alquimia es un peeling médico de última generación que combina distintos activos en fases para renovar la piel de forma profunda y progresiva. Lo que más les gusta a las pacientes es que desde la primera sesión se nota un cambio real: la piel queda más luminosa, pareja, sin manchas y mucho más suave.
+  alquimia: `Mirá, el Alquimia es uno de los favoritos de nuestras pacientes. Es un peeling médico que trabaja en varias fases para renovar la piel de forma profunda — desde la primera sesión se nota diferencia real: piel más luminosa, pareja, sin manchas.
 
-Lo realiza la Dra. Sabrina con protocolo médico, así que es seguro y personalizado. ¿Ya te hiciste algún peeling antes o sería la primera vez?`,
+Lo hace la Dra. Sabrina con protocolo personalizado según tu piel. ¿Ya te hiciste algún peeling antes o sería la primera vez?`,
 
-  prp: `El PRP — Plasma Rico en Plaquetas — es un tratamiento 100% natural porque se trabaja con tu propia sangre. Se extrae una muestra, se procesa y se obtiene un concentrado con factores de crecimiento que regeneran la piel y estimulan el crecimiento del cabello.
+  prp: `El PRP es buenísimo y muy valorado porque es 100% natural — se trabaja con tu propia sangre, así que no hay riesgo de ningún tipo.
 
-Para la piel deja un efecto de luminosidad y firmeza muy bueno. Para la caída de cabello es de los más efectivos que hay. Y al ser autólogo no hay riesgo de rechazo.
+Se usa mucho para dos cosas: rejuvenecer el rostro (firmeza, luminosidad) y tratar la caída de cabello. En capilar es de los tratamientos más efectivos que hay. ¿Lo consultás para rostro o para cabello?`,
 
-¿Lo consultás para rostro o para cabello?`,
+  mesoterapia: `La mesoterapia funciona muy bien para flacidez, celulitis, caída de cabello o grasa localizada. Son microinyecciones de vitaminas y activos específicos según lo que necesites — resultados se empiezan a ver bastante rápido.
 
-  mesoterapia: `La mesoterapia son microinyecciones de vitaminas, aminoácidos y activos específicos según lo que necesites. Sirve para flacidez, celulitis, caída de cabello, grasa localizada... los resultados se ven bastante rápido, desde las primeras sesiones.
+Lo aplica la Dra. Sabrina. ¿Qué zona o qué es lo que querés tratar?`,
 
-Lo aplica la Dra. Sabrina. ¿Qué es lo que querés tratar?`,
-
-  peeling: `El peeling químico renueva las capas superficiales de la piel. Mejora manchas, cicatrices de acné, poros dilatados y arrugas finas. La Dra. Sabrina evalúa tu tipo de piel y elige el peeling más adecuado para vos.
+  peeling: `El peeling químico renueva la piel y mejora manchas, poros dilatados, cicatrices de acné y arrugas finas. La Dra. Sabrina evalúa tu tipo de piel y elige la fórmula exacta para vos — no es algo genérico.
 
 ¿Ya te hiciste alguno antes o sería la primera vez?`,
 
-  botox: `El Botox relaja temporalmente los músculos que forman las líneas de expresión — frente, entrecejo, patas de gallo. Es rápido, sin cirugía y con recuperación prácticamente inmediata. Lo que más valoran las pacientes es que queda natural, no da cara rígida.
+  botox: `El Botox relaja los músculos que forman arrugas de expresión — frente, entrecejo, patas de gallo. Lo que más valoran las pacientes es que queda totalmente natural, no da cara rígida cuando está bien aplicado.
 
-Lo hace la Dra. Sabrina. Para este tratamiento recomendamos arrancar con una consulta para que te evalúe y te diga exactamente qué necesitás. ¿Te interesa que coordinemos eso?`,
+Lo hace la Dra. Sabrina. Para este tratamiento arrancamos con una consulta para que te evalúe y te diga exactamente qué necesitás y cuánto. La consulta son $40.000 que se descuentan del tratamiento. ¿Te interesa que coordinemos eso?`,
 
-  endymed: `El Endymed Intensif + FSR es radiofrecuencia fraccionada con microagujas — una de las tecnologías más avanzadas que hay para rejuvenecimiento. Combina dos tecnologías: el Intensif trabaja desde adentro estimulando colágeno (ideal para cicatrices y flacidez profunda), y el FSR perfecciona la superficie, textura y poros.
+  endymed: `El Endymed Intensif + FSR es de las tecnologías más avanzadas para rejuvenecimiento. Combina radiofrecuencia fraccionada con microagujas — el Intensif trabaja en profundidad estimulando colágeno (ideal para flacidez y cicatrices), y el FSR afina textura y poros.
 
-El resultado es piel más firme, pareja y rejuvenecida. Para este tratamiento la Dra. Sabrina te hace una consulta primero para armar el protocolo ideal para tu caso. ¿Qué es lo que querés mejorar?`,
+El resultado es piel notoriamente más firme y pareja. La Dra. Sabrina te hace una consulta previa para armar el protocolo ideal para tu caso. ¿Qué es lo que querés mejorar?`,
 
-  endyeyes: `El EndyEyes es el tratamiento de radiofrecuencia específico para el contorno de ojos. Estimula el colágeno en las capas profundas, mejora la firmeza, suaviza las líneas finas y reduce bolsas. La mirada queda mucho más descansada y rejuvenecida.
+  endyeyes: `El EndyEyes es radiofrecuencia específica para el contorno de ojos — estimula colágeno, mejora firmeza, suaviza líneas finas y reduce bolsas. La mirada queda mucho más descansada y rejuvenecida.
 
-Es no invasivo, seguro para todo tipo de piel. ¿Consultas para ese tratamiento o querés info de algo más?`,
+No invasivo, sin agujas, seguro para todo tipo de piel. ¿Te interesa coordinar un turno para verlo?`,
 
-  endolift: `El Endolift es un tratamiento mínimamente invasivo con tecnología de hilo de luz Velas — básicamente un láser intradérmico que calienta y contrae los tejidos desde adentro, sin cirugía. Tensa la piel, define el óvalo facial, mejora la flacidez del cuello y también se puede hacer en cuerpo.
+  endolift: `El Endolift es mínimamente invasivo — usa un hilo de luz láser intradérmico que calienta y contrae los tejidos desde adentro, sin cirugía. Tensa la piel, define el óvalo facial, mejora la flacidez del cuello. Los resultados son muy naturales y progresivos.
 
-Los resultados son muy naturales y progresivos. Para este tratamiento la Dra. Sabrina hace una valoración previa para ver si es lo indicado para vos. ¿Querés que coordinemos eso?`,
+Para este tratamiento la Dra. Sabrina hace una valoración previa para ver si es lo indicado para vos. La consulta son $40.000 que se descuentan después. ¿Querés que coordinemos esa consulta?`,
 
-  hifu: `El HIFU usa ultrasonido enfocado de alta intensidad para tensar la piel sin ninguna aguja ni corte. Llega a capas profundas que otros tratamientos no alcanzan, estimula el colágeno y el resultado es lifting progresivo durante los meses siguientes.
+  hifu: `El HIFU es básicamente un lifting sin agujas ni cirugía — usa ultrasonido enfocado que llega a capas profundas de la piel que otros tratamientos no alcanzan. Estimula colágeno y el resultado es un lifting progresivo que se va notando durante los meses siguientes.
 
-Se usa mucho para flacidez del rostro, cuello y papada. La Dra. Sabrina te hace una evaluación antes para ver el protocolo ideal. ¿Lo consultás para zona facial?`,
+Ideal para flacidez del rostro, cuello y papada. La Dra. Sabrina te evalúa primero para ver el protocolo ideal. ¿Lo consultás para zona facial?`,
 
-  criolipolisis: `La criolipólisis congela y elimina células grasas de forma definitiva en zonas específicas — panza, flancos, cartucheras, espalda. No es cirugía, no hay recuperación. El cuerpo va eliminando esas células de forma natural durante los meses siguientes.
+  criolipolisis: `La criolipólisis congela células de grasa de forma definitiva — el cuerpo las elimina naturalmente durante las semanas siguientes. Sin cirugía, sin recuperación, sin dolor.
 
-Es ideal para esas zonas donde la dieta y el ejercicio no terminan de resolver. ¿Qué zona te interesa tratar?`,
+Es ideal para esas zonas donde la dieta y el ejercicio no terminan de resolver: panza, flancos, cartucheras, espalda. ¿Qué zona te interesa tratar?`,
 
-  depilacion: `Para depilación definitiva trabajamos con Monolith Mediostar, que es tecnología láser diodo de última generación. Es la que mejores resultados da y es apta para todo tipo de vello y fototipo de piel.
+  depilacion: `Para depilación definitiva trabajamos con el Monolith Mediostar — tecnología láser diodo de última generación, apta para todo tipo de piel y vello.
 
-Tenemos precio por zona y combos con descuento. ¿Qué zonas te interesaría tratar?`,
+Tenemos precio por zona y combos con descuento para quienes hacen varias zonas juntas. ¿Qué zonas te interesaría tratar?`,
 
-  limpieza: `La limpieza facial profunda combina vaporización, extracción, alta frecuencia y tratamiento final según tu tipo de piel. Deja la piel descongesionada, los poros limpios y mucho más luminosa.
+  limpieza: `La limpieza facial profunda deja la piel descongesionada, los poros limpios y muy luminosa — combina vaporización, extracción, alta frecuencia y tratamiento final según tu tipo de piel.
 
-Está buena hacerla cada 30-45 días como mantenimiento. ¿Cuándo fue la última vez que te hiciste una?`,
+Está muy buena hacerla cada 30-45 días como mantenimiento. ¿Cuándo fue la última vez que te hiciste una?`,
 
-  suero: `Los sueros terapéuticos son tratamientos con vitaminas y nutrientes que se aplican de forma endovenosa. Los hace el Dr. Antuña. Hay distintos protocolos según lo que necesites — energía, defensas, hidratación, antioxidante.
+  suero: `Los sueros terapéuticos son vitaminas y nutrientes que se aplican de forma endovenosa — efecto muy notorio en energía, defensas, hidratación o antioxidante según el protocolo. Los hace el Dr. Antuña.
 
-¿Querés que te cuente más de alguno en particular?`,
+¿Querés que te cuente los distintos tipos o coordinamos una consulta directamente?`,
 
-  capilar: `Para caída y fortalecimiento del cabello tenemos mesoterapia capilar con microinyecciones de activos directamente en el cuero cabelludo, y también PRP capilar que es con tu propio plasma.
+  capilar: `Para caída y fortalecimiento del cabello tenemos dos opciones muy buenas: mesoterapia capilar (microinyecciones de activos en el cuero cabelludo) y PRP capilar (con tu propio plasma). Los dos dan muy buenos resultados.
 
-Los dos tienen muy buenos resultados. ¿Tenés diagnóstico previo o sería la primera consulta?`,
+¿Tenés diagnóstico previo o sería la primera consulta?`,
 
-  encurve: `El enCurve es un tratamiento de radiofrecuencia sin contacto que reduce grasa localizada y remodela el cuerpo. Actúa en la capa adiposa calentando las células de grasa para que el cuerpo las elimine de forma natural, sin cirugía y sin ningún tipo de dolor.
+  encurve: `El enCurve reduce grasa localizada y remodela el cuerpo con radiofrecuencia sin contacto — calienta las células de grasa para que el cuerpo las elimine naturalmente, sin ningún tipo de cirugía ni dolor.
 
-Es muy bueno para panza, flancos y cartucheras. Se notan cambios desde las primeras sesiones. ¿Te interesa una zona en particular?`,
+Funciona muy bien para panza, flancos y cartucheras. Los cambios se empiezan a notar desde las primeras sesiones. ¿Qué zona te interesa?`,
 
-  cmslim: `El CM Slim combina campos electromagnéticos de alta intensidad con radiofrecuencia para tonificar músculos y reducir grasa al mismo tiempo. En una sola sesión hace el equivalente a miles de contracciones musculares — es ideal para abdomen, glúteos, brazos y piernas.
+  cmslim: `El CM Slim es el tratamiento ideal si querés tonificar y reducir al mismo tiempo — combina campos electromagnéticos con radiofrecuencia, haciendo el equivalente a miles de contracciones musculares en una sola sesión.
 
-Tenemos distintos protocolos según el objetivo: tonificación, volumen o reducción. ¿Qué zona querés trabajar?`,
+Buenísimo para abdomen, glúteos, brazos y piernas. ¿Qué zona querés trabajar?`,
 
-  masajes: `Hacemos masajes terapéuticos para contracturas y dolor muscular, y masajes modeladores que combinan técnicas de drenaje linfático y reducción de medidas. Son muy buenos para complementar tratamientos estéticos.
+  masajes: `Hacemos masajes terapéuticos para contracturas y dolor muscular, y masajes modeladores con técnicas de drenaje linfático y reducción de medidas. Son muy buenos para complementar tratamientos estéticos.
 
-¿Estás pensando en algo más terapéutico o para modelar el cuerpo?`,
+¿Estás pensando en algo terapéutico o más para modelar el cuerpo?`,
 
-  ginecologia: `El Dr. Andrés Echegaray atiende consultas ginecológicas en la clínica. Podés coordinar una consulta directamente con él para controles, consultas o lo que necesites.
+  ginecologia: `El Dr. Andrés Echegaray atiende consultas ginecológicas en la clínica — controles, consultas o lo que necesites.
 
-¿Querés que te busquemos un turno disponible?`,
+La consulta tiene un valor de $40.000. ¿Querés que te busque un turno disponible?`,
 
-  endocrinologia: `La Dra. Laura Otiñano atiende consultas de endocrinología y descenso de peso. Si tenés algo que ver con metabolismo, tiroides, diabetes, o simplemente querés bajar de peso con un seguimiento médico, ella es la indicada.
+  endocrinologia: `La Dra. Laura Otiñano atiende endocrinología y descenso de peso — metabolismo, tiroides, diabetes, o seguimiento médico para bajar de peso de forma segura y sostenida.
 
-¿Querés que coordinemos una consulta?`,
+La consulta son $40.000. ¿Querés que coordinemos un turno?`,
 
-  estetica: `El Dr. Rolando Ribaudo atiende consultas de estética médica en la clínica — evaluación de tratamientos, indicación de procedimientos y seguimiento general. Es el indicado para una primera valoración si no sabés por dónde empezar o necesitás orientación médica.
+  estetica: `El Dr. Rolando Ribaudo atiende consultas de estética médica — evaluación de tratamientos, indicación de procedimientos y seguimiento general. Ideal si no sabés por dónde empezar o querés una orientación médica completa.
 
-¿Querés que coordinemos una consulta?`,
+La consulta son $40.000. ¿Querés que coordinemos?`,
 };
 
 // ─── KEYWORDS DE TRATAMIENTOS ─────────────────────────────────────────────────
@@ -263,11 +261,15 @@ function saludoHora() {
   if (n < 20) return 'Buenas tardes';
   return 'Buenas noches';
 }
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 // ─── CONFIRMAR TURNO Y PEDIR SEÑA ────────────────────────────────────────────
 async function confirmarTurnoConSena(sock, jid, paciente, num, horario, desc, monto, profIdTurno=null) {
   const montoTexto = fmtPeso(monto);
+  const esConsulta = desc.toLowerCase().includes('consulta');
+  const notaDescuento = esConsulta ? '\n_(Este monto se descuenta del tratamiento que arranques después.)_' : '';
   await botSend(sock, jid, {
-    text: `Perfecto, anotamos tu turno para *${desc}* — *${horario}*.\n\nPara reservar el lugar te pedimos una seña de *${montoTexto}*${desc.includes('Consulta') ? ' (se descuenta del tratamiento)' : ''}.\n\nTransferí al alias:\n*${cfg.ALIAS_PAGO}*\n\nY enviame el comprobante acá para confirmar. 😊`,
+    text: `Genial! Anoto tu turno para *${desc}* — *${horario}* ✅\n\nPara reservar el lugar te pedimos una seña de *${montoTexto}*.${notaDescuento}\n\nTransferís al alias:\n👉 *${cfg.ALIAS_PAGO}*\n\nCuando hagas la transferencia mandame el comprobante acá y queda confirmado 🙌`,
   });
   await notificarEquipo(sock, `📅 *Nueva solicitud de turno*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 ${desc}\n🗓️ ${horario}\n💰 Seña: ${montoTexto}\n⏳ Esperando comprobante`);
   convState.set(jid, { step: 'esperando_comprobante', data: { desc, monto, profIdTurno }, ts: Date.now() });
@@ -350,15 +352,22 @@ async function handleMessage(sock, msg) {
   if (conv?.step === 'esperando_comprobante') {
     const { desc, monto } = conv.data;
     const tieneImagen = !!(msg.message?.imageMessage || msg.message?.documentMessage);
-    if (tieneImagen || body.length > 5) {
+    const nB0 = normalize(body);
+    // Detectar si quieren cancelar en lugar de pagar
+    if (matchesAny(body, cfg.KEYWORDS.cancelar) || nB0.includes('no voy') || nB0.includes('cancela') || nB0.includes('dejo')) {
+      await botSend(sock, jid, { text: `No hay problema, el turno queda sin reservar. Si en otro momento querés coordinar, escribime cuando quieras 😊` });
+      clearConv(jid);
+      return;
+    }
+    if (tieneImagen || body.length > 10) {
       await botSend(sock, jid, {
-        text: `¡Perfecto! Recibimos tu comprobante. Tu turno para ${desc} queda *confirmado*. Te avisamos la fecha y hora exacta a la brevedad. ¡Gracias!`,
+        text: `Perfecto, recibimos el comprobante! 🙌 Tu turno para *${desc}* queda *confirmado*. Ya te notificamos al equipo. ¡Nos vemos pronto!`,
       });
       await notificarEquipo(sock, `💰 *Seña recibida*\n👤 ${paciente?.nombre || '+' + num}\n📱 +${num}\n🔸 ${desc}\n💵 Seña: ${fmtPeso(monto)}\n⚡ Confirmar turno en la agenda`);
       clearConv(jid);
     } else {
       await botSend(sock, jid, {
-        text: `Para confirmar tu turno necesitamos el comprobante de la transferencia. Podés enviarlo como imagen o captura de pantalla.`,
+        text: `Para confirmar el turno necesito el comprobante de la transferencia. Podés mandarlo como imagen o captura de pantalla desde tu app del banco 📲`,
       });
     }
     return;
@@ -394,15 +403,15 @@ async function handleMessage(sock, msg) {
     const slots = getSlotsDisponibles(tratKey, data);
     if (slots.length === 0) {
       await botSend(sock, jid, {
-        text: `En este momento no tengo horarios disponibles en los próximos días para mostrarte. Escribime tu preferencia y lo coordinamos manualmente.`,
+        text: `En este momento no tengo horarios cargados para mostrarte, pero te coordino igual. ¿Qué día y horario te quedaría mejor? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
       });
       setConv(jid, 'esperando_slot_manual', { desc, monto, tratamiento, profIdTurno });
       return;
     }
 
-    let txt = `Estos son los horarios disponibles para *${desc}*:\n\n`;
+    let txt = `Mirá, estos son los turnos disponibles para *${desc}*:\n\n`;
     slots.forEach((s, i) => { txt += `*${i + 1}.* ${s.label}\n`; });
-    txt += `\nRespondé con el número de la opción que te queda mejor. 😊`;
+    txt += `\n¿Cuál te viene mejor? Respondé con el número 😊`;
     await botSend(sock, jid, { text: txt });
     setConv(jid, 'esperando_slot', { desc, monto, slots, tratamiento, profIdTurno });
     return;
@@ -442,15 +451,23 @@ async function handleMessage(sock, msg) {
   if (conv?.step === 'esperando_confirmacion_consulta') {
     const { tratamiento } = conv.data;
     const nB = normalize(body);
-    const confirma = matchesAny(body, ['si','sí','dale','ok','bueno','claro','perfecto','quiero','me interesa','coordina','agendame']);
+    const confirma = matchesAny(body, ['si','sí','dale','ok','bueno','claro','perfecto','quiero','me interesa','coordina','agendame','cuando','disponible','horario','turno']);
+    const objeta = nB.includes('caro') || nB.includes('pienso') || nB.includes('despues') || nB.includes('después') || nB.includes('no se') || nB.includes('no sé') || nB.includes('duda');
+    if (objeta) {
+      await botSend(sock, jid, {
+        text: `Entiendo, no hay apuro. La consulta son $40.000 y ese monto se descuenta del tratamiento cuando arrancás — o sea que en realidad es gratis si seguís con el procedimiento.\n\nCuando quieras coordinar, escribime y te busco un turno 😊`,
+      });
+      clearConv(jid);
+      return;
+    }
     if (confirma) {
       await botSend(sock, jid, {
-        text: `Perfecto. ¿Qué día y horario te queda bien? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
+        text: `Dale, te busco un turno. ¿Algún día o franja horaria que te quede mejor? Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs.`,
       });
       setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento });
     } else {
       await botSend(sock, jid, {
-        text: `No hay problema. Si en algún momento querés coordinar la valoración, escribime y lo armamos. ¿Hay algo más en lo que te pueda ayudar?`,
+        text: `Cuando quieras coordinar la consulta, escribime y lo armamos. ¿Hay algo más en lo que te pueda ayudar?`,
       });
       clearConv(jid);
     }
@@ -470,22 +487,64 @@ async function handleMessage(sock, msg) {
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
       if (ultimoTurno) {
         await botSend(sock, jid, {
-          text: `Entendido${nombre ? ' ' + nombre : ''}, turno para *${ultimoTurno.servicio}* como la última vez. ¿Qué día y horario te queda bien? Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.`,
+          text: `Perfecto${nombre ? ' ' + nombre : ''}, te busco turno para *${ultimoTurno.servicio}* como la última vez. ¿Qué día te viene mejor? Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.`,
         });
         setConv(jid, 'esperando_horario', { tratamiento: ultimoTurno.servicio });
       } else {
         await botSend(sock, jid, {
-          text: `Claro${nombre ? ' ' + nombre : ''}, ¿podés decirme qué tratamiento querés? No tengo registrado el último para buscártelo rápido.`,
+          text: `Claro${nombre ? ' ' + nombre : ''}, ¿podés decirme qué tratamiento querés? No tengo registrado el anterior.`,
         });
       }
       return;
     }
 
-    // Detección de frustración o confusión
-    const estaConfundido = nB.includes('como') || nB.includes('no sabes') || nB.includes('no entiendo') || nB.includes('que') && body.endsWith('?') && body.length < 15;
-    if (estaConfundido && !trat) {
+    // Manejo de objeciones — "está caro", "lo pienso", "no sé si es para mí"
+    const esCaro = nB.includes('caro') || nB.includes('mucho') || nB.includes('muy caro') || nB.includes('no llego') || nB.includes('no tengo plata');
+    const loPiensa = nB.includes('lo pienso') || nB.includes('voy a pensar') || nB.includes('despues te aviso') || nB.includes('después te aviso') || nB.includes('en otro momento') || nB.includes('lo veo') || nB.includes('ya te aviso');
+    const tieneDudas = nB.includes('no se si') || nB.includes('no sé si') || nB.includes('no estoy segur') || nB.includes('tengo dudas') || nB.includes('no se para') || nB.includes('sirve para mi') || nB.includes('sirve para mí');
+
+    if (esCaro) {
       await botSend(sock, jid, {
-        text: `Disculpá la confusión. Para agilizar, ¿cuál de estos querés?\n\n• Depilación láser\n• Tratamiento facial (Endolift, Botox, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta estética — Dra. Sabrina Quiroga\n• Consulta estética médica — Dr. Rolando Ribaudo\n• Consulta ginecológica — Dr. Andrés Echegaray\n• Consulta endocrinológica / descenso de peso — Dra. Laura Otiñano\n• Sueroterapia — Dr. Walter Antuña`,
+        text: `Entendemos que los precios importan. Lo que te puedo decir es que trabajamos con profesionales médicos y tecnología de primera — no es una estética común.\n\nTambién tenemos combos y opciones de pago. ¿Querés que veamos alguna alternativa que se adapte a lo que buscás?`,
+      });
+      setConv(jid, 'esperando_tratamiento', conv?.data);
+      return;
+    }
+
+    if (loPiensa) {
+      await botSend(sock, jid, {
+        text: `Dale, sin problema! Cuando estés lista/o escribime y te coordino el turno.\n\nSolo te digo que los turnos se llenan bastante, así que si tenés alguna fecha en mente conviene reservar con anticipación. ¡Cualquier consulta estoy acá! 😊`,
+      });
+      clearConv(jid);
+      return;
+    }
+
+    if (tieneDudas) {
+      await botSend(sock, jid, {
+        text: `Normal tener dudas, es algo que te hacés en el cuerpo. Por eso siempre recomendamos arrancar con una consulta con la Dra. Sabrina o con el Dr. Ribaudo — te evalúan, te cuentan qué esperás del tratamiento y si es lo indicado para vos.\n\n¿Querés coordinar una consulta para salir de la duda?`,
+      });
+      setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: trat || 'consulta' });
+      return;
+    }
+
+    // Preguntas sobre sesiones / cuánto dura / cuántas veces
+    const preguntaSesiones = nB.includes('cuantas sesiones') || nB.includes('cuántas sesiones') || nB.includes('cuanto dura') || nB.includes('cuánto dura') || nB.includes('cuantas veces') || nB.includes('cada cuanto');
+    if (preguntaSesiones) {
+      const respSesiones = trat === 'depilacion'
+        ? `Para depilación láser generalmente se hacen entre 6 y 10 sesiones espaciadas cada 4-8 semanas según la zona. Los resultados son permanentes en el vello tratado. ¿Qué zona te interesa?`
+        : trat === 'botox' || trat === 'endolift' || trat === 'hifu'
+        ? `Los resultados de este tratamiento duran entre 6 meses y 1 año según el caso. La Dra. Sabrina te da el detalle exacto en la consulta previa, que es el primer paso. ¿La coordinamos?`
+        : `Depende del tratamiento y del caso particular. La mejor forma de saberlo es en la consulta con la Dra. Sabrina, donde te arma el protocolo a medida. ¿Querés que coordinemos eso?`;
+      await botSend(sock, jid, { text: respSesiones });
+      if (trat) setConv(jid, 'esperando_confirmacion_consulta', { tratamiento: trat });
+      return;
+    }
+
+    // Detección de frustración o confusión
+    const estaConfundido = (nB.includes('no sabes') || nB.includes('no entiendo') || (nB.includes('que') && body.endsWith('?') && body.length < 15)) && !trat;
+    if (estaConfundido) {
+      await botSend(sock, jid, {
+        text: `Disculpá! Te cuento las opciones para que sea más fácil:\n\n• Depilación láser\n• Tratamientos faciales (Endolift, Botox, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consulta estética — Dra. Sabrina Quiroga\n• Consulta estética médica — Dr. Rolando Ribaudo\n• Ginecología — Dr. Andrés Echegaray\n• Endocrinología / descenso de peso — Dra. Laura Otiñano\n• Sueroterapia — Dr. Walter Antuña\n\n¿Cuál te interesa?`,
       });
       return;
     }
@@ -499,19 +558,19 @@ async function handleMessage(sock, msg) {
     const esZonaDepil = nB.includes('axila') || nB.includes('bikini') || nB.includes('pierna') || nB.includes('brazo') || nB.includes('espalda') || nB.includes('abdomen') || nB.includes('bozo') || nB.includes('cavado') || nB.includes('gluteo') || nB.includes('rostro') || nB.includes('labio') || nB.includes('zona');
 
     if (esCuerpoCompleto && (esPrecio || esPromo || trat === 'depilacion' || nB.includes('depil'))) {
-      await botSend(sock, jid, { text: `Para depilación de cuerpo completo armamos combos según las zonas que necesitás. Los más pedidos son:\n\n• *Combo Mujer 1* — Axilas + Cavado + Tiro de Cola\n• *Combo Mujer 2* — Axilas + Cavado + ½ Pierna\n• *Combo Mujer 3* — Axilas + Cavado + TdC + Pierna completa\n\nTambién podés armar tu propio combo con las zonas que quieras y te damos precio especial. ¿Qué zonas te interesan?` });
+      await botSend(sock, jid, { text: `Para depilación de cuerpo completo armamos combos según las zonas que necesitás. Los más pedidos:\n\n• *Combo Mujer 1* — Axilas + Cavado + Tiro de Cola\n• *Combo Mujer 2* — Axilas + Cavado + ½ Pierna\n• *Combo Mujer 3* — Axilas + Cavado + TdC + Pierna completa\n\nTambién podés armar tu combo con las zonas que quieras y te damos precio especial. ¿Qué zonas tenés en mente?` });
       setConv(jid, 'esperando_tratamiento', conv?.data);
       return;
     }
 
     if ((esPrecio || esPromo) && (trat === 'depilacion' || esZonaDepil || nB.includes('depil'))) {
-      await botSend(sock, jid, { text: `Los precios de depilación láser van por zona. Algunos ejemplos:\n\n• Axilas — $22.000\n• Cavado — $23.000\n• Media pierna — $22.000\n• Pierna completa — $26.500\n• Bozo — $12.650\n\nTenemos combos con descuento si hacés varias zonas juntas. ¿Cuáles te interesan?` });
+      await botSend(sock, jid, { text: `Los precios de depilación láser van por zona:\n\n• Axilas — $22.000\n• Cavado — $23.000\n• Media pierna — $22.000\n• Pierna completa — $26.500\n• Bozo — $12.650\n\nHaciendo varias zonas juntas te armamos un combo con descuento. ¿Qué zonas te interesan?` });
       setConv(jid, 'esperando_tratamiento', conv?.data);
       return;
     }
 
     if (esPrecio || esPromo) {
-      await botSend(sock, jid, { text: `Los precios dependen del tratamiento. ¿Sobre cuál querés saber?\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas ($40.000)\n• Sueroterapia` });
+      await botSend(sock, jid, { text: `Los precios dependen del tratamiento. ¿Sobre cuál querés consultar?\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas — $40.000\n• Sueroterapia` });
       setConv(jid, 'esperando_tratamiento', conv?.data);
       return;
     }
@@ -530,13 +589,12 @@ async function handleMessage(sock, msg) {
       }
     } else if (esConsultaDirecta) {
       await botSend(sock, jid, {
-        text: `Perfecto. Te muestro los horarios disponibles para una consulta con la Dra. Sabrina.`,
+        text: `Dale, te busco los horarios disponibles para una consulta con la Dra. Sabrina.`,
       });
       setConv(jid, 'esperando_horario', { tipo: 'consulta', precio: PRECIO_CONSULTA, tratamiento: 'Consulta con Dra. Sabrina Quiroga' });
     } else {
-      // No avanzar con texto sin sentido — ofrecer opciones concretas
       await botSend(sock, jid, {
-        text: `Puedo ayudarte con:\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas (Dra. Sabrina, Dr. Ribaudo, Ginecología, Endocrinología, Sueroterapia)\n• Precios e información\n\n¿Cuál te interesa?`,
+        text: `Te puedo ayudar con:\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas (Dra. Sabrina, Dr. Ribaudo, Ginecología, Endocrinología, Sueroterapia)\n• Precios e información\n\n¿Cuál te interesa?`,
       });
     }
     return;
@@ -549,11 +607,11 @@ async function handleMessage(sock, msg) {
 
     if (esPrimera) {
       await botSend(sock, jid, {
-        text: `Bienvenida/o a One Depil. Somos una clínica médico-estética, trabajamos con la Dra. Sabrina Quiroga y un equipo de profesionales. ¿Tenés algún tratamiento en mente o querés que te cuente las opciones?`,
+        text: `Bienvenida/o a One Depil! Somos una clínica médico-estética en San Juan. Trabajamos con la Dra. Sabrina Quiroga y un equipo de profesionales médicos.\n\nTenemos depilación láser, tratamientos faciales, reducción corporal, y también consultas de ginecología, endocrinología y sueroterapia. ¿Tenés algo en mente o querés que te oriente?`,
       });
     } else {
       await botSend(sock, jid, {
-        text: `Hola${nombre ? ' ' + nombre : ''}, qué bueno que nos escribís. ¿En qué te podemos ayudar?`,
+        text: `Hola${nombre ? ' ' + nombre : ''}, qué bueno que nos escribís de nuevo! ¿En qué te puedo ayudar hoy?`,
       });
     }
     return;
@@ -561,21 +619,21 @@ async function handleMessage(sock, msg) {
 
   // ── RECOMENDACIÓN POR ZONA / OBJETIVO ────────────────────────────────────────
   const nBody = normalize(body);
-  const quiereRecomendacion = nBody.includes('que me recomiendas') || nBody.includes('que tratamiento') || nBody.includes('que me recomendas') || nBody.includes('cual me recomendas') || nBody.includes('que opcion');
+  const quiereRecomendacion = nBody.includes('que me recomiendas') || nBody.includes('que tratamiento') || nBody.includes('que me recomendas') || nBody.includes('cual me recomiendas') || nBody.includes('que opcion') || nBody.includes('por donde empiezo') || nBody.includes('no se por donde');
   if (quiereRecomendacion) {
     let resp = '';
     if (nBody.includes('abdomen') || nBody.includes('panza') || nBody.includes('barriga') || nBody.includes('vientre')) {
-      resp = `Para reducir abdomen tenemos tres opciones muy buenas:\n\n• *Criolipólisis* — elimina grasa de forma definitiva, sin cirugía\n• *enCurve* — radiofrecuencia que reduce y remodela\n• *CM Slim* — tonifica músculo y reduce grasa a la vez\n\nLo ideal es una valoración con la Dra. Sabrina para ver cuál se adapta mejor a tu caso y tu objetivo. ¿Te interesa coordinar eso?`;
+      resp = `Para reducir abdomen tenemos tres opciones, según el objetivo:\n\n• *Criolipólisis* — elimina grasa de forma definitiva (sin cirugía, sin recuperación)\n• *enCurve* — radiofrecuencia que reduce y remodela\n• *CM Slim* — tonifica músculo y reduce grasa al mismo tiempo\n\nLo más recomendable es una consulta con la Dra. Sabrina para que evalúe tu caso. La consulta son $40.000 y se descuentan del tratamiento. ¿Te interesa coordinarla?`;
     } else if (nBody.includes('rostro') || nBody.includes('cara') || nBody.includes('facial') || nBody.includes('arrugas') || nBody.includes('flacidez')) {
-      resp = `Para rostro y flacidez facial tenemos:\n\n• *Endolift* — láser intradérmico que tensa y define el óvalo\n• *Endymed Intensif+FSR* — radiofrecuencia fraccionada, ideal para textura y firmeza\n• *HIFU* — lifting sin agujas ni cirugía\n• *Botox* — suaviza líneas de expresión\n\n¿Alguno te interesa en particular o querés que la Dra. Sabrina te evalúe?`;
-    } else if (nBody.includes('celulitis') || nBody.includes('cartuchera') || nBody.includes('flanco') || nBody.includes('pierna') || nBody.includes('muslo')) {
-      resp = `Para celulitis y cartucheras las mejores opciones son:\n\n• *Criolipólisis* — para reducir volumen de grasa\n• *Mesoterapia corporal* — mejora la textura y circulación\n• *enCurve* — remodela y afirma\n\n¿Querés info de alguno en particular?`;
+      resp = `Para el rostro depende de qué querés mejorar:\n\n• *Endolift* — tensa y define el óvalo, muy natural\n• *Endymed Intensif+FSR* — firmeza, textura y poros\n• *HIFU* — lifting progresivo sin agujas ni cirugía\n• *Botox* — suaviza líneas de expresión\n\nSi querés una evaluación personalizada, te coordino una consulta con la Dra. Sabrina. ¿Te interesa?`;
+    } else if (nBody.includes('celulitis') || nBody.includes('cartuchera') || nBody.includes('flanco') || nBody.includes('muslo')) {
+      resp = `Para celulitis y cartucheras las mejores opciones son:\n\n• *Criolipólisis* — reduce volumen de grasa\n• *Mesoterapia corporal* — mejora textura y circulación\n• *enCurve* — remodela y afirma\n\nUna consulta con la Dra. Sabrina te ayuda a elegir el que más te conviene. ¿La coordinamos?`;
     } else if (nBody.includes('gluteo') || nBody.includes('glúteo') || nBody.includes('cola')) {
-      resp = `Para glúteos el *CM Slim* es excelente — tonifica y da volumen muscular sin cirugía. También se puede complementar con mesoterapia para mejorar la textura de la piel.\n\n¿Querés más info del CM Slim?`;
+      resp = `Para glúteos el *CM Slim* es excelente — tonifica y da volumen muscular sin cirugía. Hace el equivalente a miles de contracciones en una sola sesión.\n\n¿Querés que te coordine un turno para probarlo?`;
     } else if (nBody.includes('manchas') || nBody.includes('poros') || nBody.includes('acne') || nBody.includes('acné')) {
-      resp = `Para manchas, poros y acné tenemos:\n\n• *Alquimia* — peeling médico de renovación profunda\n• *Peeling químico* — para manchas y textura\n• *Endymed FSR* — mejora textura y poros\n\n¿Qué es lo principal que querés mejorar?`;
+      resp = `Para manchas, poros y acné tenemos:\n\n• *Alquimia* — peeling médico de renovación profunda, el más completo\n• *Peeling químico* — para manchas específicas\n• *Endymed FSR* — mejora textura y poros de forma progresiva\n\nEl Alquimia es muy bueno para resultados rápidos. ¿Te cuento más de ese?`;
     } else {
-      resp = `Contame un poco más — ¿qué zona o qué resultado querés lograr? Con eso puedo orientarte mejor sobre qué tratamiento se adapta a lo que buscás.`;
+      resp = `Contame — ¿qué zona o qué resultado querés lograr? Con eso te oriento mucho mejor. Por ejemplo: ¿es para el rostro, el cuerpo, depilación, algo médico?`;
     }
     await botSend(sock, jid, { text: resp });
     setConv(jid, 'esperando_tratamiento');
@@ -587,7 +645,7 @@ async function handleMessage(sock, msg) {
     const nombreIngresado = body.trim();
     const pareceNombre = /^[a-záéíóúüñ\s]{3,}$/i.test(nombreIngresado);
     if (!pareceNombre) {
-      await botSend(sock, jid, { text: `Necesito tu nombre y apellido para buscarte. ¿Me los decís?` });
+      await botSend(sock, jid, { text: `¿Me decís tu nombre y apellido para buscarte?` });
       return;
     }
     const encontrado = (data.pacientes || []).find(p =>
@@ -599,11 +657,12 @@ async function handleMessage(sock, msg) {
       const ventas = encontrado.ventas ? ` (historial: $${Number(encontrado.ventas).toLocaleString('es-AR')})` : '';
       await notificarEquipo(sock, `👤 *Paciente reconocido*\n*${encontrado.nombre}* (+${num})${ventas}\n🔔 Consultando por WhatsApp`);
       const ultimoT = (data.turnos || []).filter(t => t.pacienteId === encontrado.id).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))[0];
-      const historialT = ultimoT ? ` Tu última visita fue para ${ultimoT.servicio}.` : '';
-      await botSend(sock, jid, { text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historialT} ¿En qué te puedo ayudar hoy?` });
+      const historialT = ultimoT ? ` La última vez viniste para ${ultimoT.servicio}.` : '';
+      await botSend(sock, jid, { text: `Hola ${primerNombre}! Soy Aldana de One Depil 😊${historialT} ¿En qué te puedo ayudar hoy?` });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: encontrado });
     } else {
-      await botSend(sock, jid, { text: `${saludoHora()}, soy Aldana de One Depil. No te encuentro en el sistema, pero te ayudo igual. ¿Sobre qué tratamiento querés consultar?` });
+      const primerNombre = nombreIngresado.split(' ')[0];
+      await botSend(sock, jid, { text: `Hola ${primerNombre}! No te encuentro en el sistema todavía, pero te ayudo igual. ¿Sobre qué tratamiento querés consultar?` });
       setConv(jid, 'esperando_tratamiento', { nombreIngresado });
     }
     return;
@@ -638,11 +697,11 @@ async function handleMessage(sock, msg) {
 
   // Horario y ubicación solo cuando no hay flujo activo
   if (!conv && matchesAny(body, cfg.KEYWORDS.horario)) {
-    await botSend(sock, jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en el ${cfg.CLINICA.direccion}. ¿Te gustaría que coordinemos un turno?` });
+    await botSend(sock, jid, { text: `Atendemos lunes a viernes de 15 a 21hs y sábados de 9 a 15hs. Estamos en ${cfg.CLINICA.direccion}. ¿Querés que coordinemos un turno?` });
     return;
   }
   if (!conv && matchesAny(body, cfg.KEYWORDS.ubicacion)) {
-    await botSend(sock, jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan. Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs.` });
+    await botSend(sock, jid, { text: `Estamos en el Pase de Compras de Ayres Village Open Mall, San Juan 📍 Atendemos lunes a viernes 15 a 21hs y sábados 9 a 15hs. ¿Venís por primera vez?` });
     return;
   }
 
@@ -670,14 +729,14 @@ async function handleMessage(sock, msg) {
   }
 
   if (quierePrecios) {
-    await botSend(sock, jid, { text: `Los valores dependen del tratamiento. ¿Sobre cuál querés consultar?` });
+    await botSend(sock, jid, { text: `Los precios varían según el tratamiento. ¿Sobre cuál querés saber?\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas — $40.000\n• Sueroterapia` });
     setConv(jid, 'esperando_tratamiento');
     return;
   }
 
   if (quiereServicios) {
     await botSend(sock, jid, {
-      text: `Hacemos depilación láser Mediostar, Botox, Endolift, Endymed, HIFU, Criolipolisis, Mesoterapia, PRP, Peeling, Alquimia, Limpiezas faciales, Suero terapias, enCurve, CM Slim, y también Ginecología y Endocrinología. ¿Hay alguno en particular que te interesa?`,
+      text: `En One Depil hacemos:\n\n💎 *Tecnología médica*\nEndolift · Endymed · HIFU · Criolipólisis · enCurve · CM Slim\n\n✨ *Estética facial*\nBotox · PRP · Mesoterapia · Alquimia · Peeling · Limpiezas · EndyEyes\n\n🌸 *Depilación*\nLáser definitiva Mediostar — todas las zonas\n\n🩺 *Consultas médicas*\nEstética (Dra. Sabrina / Dr. Ribaudo) · Ginecología · Endocrinología · Sueroterapia\n\n¿Hay alguno que te interesa?`,
     });
     setConv(jid, 'esperando_tratamiento');
     return;
@@ -690,14 +749,14 @@ async function handleMessage(sock, msg) {
       const ultimoTurno = (data.turnos || [])
         .filter(t => t.pacienteId === paciente.id)
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
-      const historial = ultimoTurno ? ` Veo que tu última visita fue para ${ultimoTurno.servicio || 'un tratamiento'}.` : '';
+      const historial = ultimoTurno ? ` La última vez viniste para ${ultimoTurno.servicio || 'un tratamiento'}.` : '';
       await botSend(sock, jid, {
-        text: `${saludoHora()} ${primerNombre}, soy Aldana, coordinadora de One Depil.${historial} ¿En qué te puedo ayudar hoy?`,
+        text: `${saludoHora()} ${primerNombre}! Soy Aldana de One Depil.${historial} ¿En qué te puedo ayudar hoy?`,
       });
       setConv(jid, 'esperando_tratamiento', { pacienteEncontrado: paciente });
     } else {
       await botSend(sock, jid, {
-        text: `${saludoHora()}, soy Aldana, coordinadora de One Depil — clínica médico-estética. ¿Me decís tu nombre y apellido para verificar si ya tenés historial con nosotros?`,
+        text: `${saludoHora()}! Soy Aldana, coordinadora de One Depil 🌸 ¿Me decís tu nombre y apellido para ver si ya tenés historial con nosotros?`,
       });
       setConv(jid, 'esperando_identificacion');
     }
