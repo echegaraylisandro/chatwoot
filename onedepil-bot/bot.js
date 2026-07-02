@@ -492,6 +492,30 @@ async function handleMessage(sock, msg) {
 
     const esConsultaDirecta = nB.includes('consulta') || nB.includes('sabrina') || nB.includes('agend');
 
+    // Preguntas sobre precios, promos o información general
+    const esPrecio = nB.includes('precio') || nB.includes('cuanto sale') || nB.includes('cuanto cuesta') || nB.includes('cuanto cobran') || nB.includes('cuanto es') || nB.includes('valor') || nB.includes('costo');
+    const esPromo = nB.includes('promo') || nB.includes('descuento') || nB.includes('oferta') || nB.includes('combo') || nB.includes('paquete');
+    const esCuerpoCompleto = nB.includes('cuerpo completo') || nB.includes('cuerpo entero') || nB.includes('todo el cuerpo');
+    const esZonaDepil = nB.includes('axila') || nB.includes('bikini') || nB.includes('pierna') || nB.includes('brazo') || nB.includes('espalda') || nB.includes('abdomen') || nB.includes('bozo') || nB.includes('cavado') || nB.includes('gluteo') || nB.includes('rostro') || nB.includes('labio') || nB.includes('zona');
+
+    if (esCuerpoCompleto && (esPrecio || esPromo || trat === 'depilacion' || nB.includes('depil'))) {
+      await botSend(sock, jid, { text: `Para depilación de cuerpo completo armamos combos según las zonas que necesitás. Los más pedidos son:\n\n• *Combo Mujer 1* — Axilas + Cavado + Tiro de Cola\n• *Combo Mujer 2* — Axilas + Cavado + ½ Pierna\n• *Combo Mujer 3* — Axilas + Cavado + TdC + Pierna completa\n\nTambién podés armar tu propio combo con las zonas que quieras y te damos precio especial. ¿Qué zonas te interesan?` });
+      setConv(jid, 'esperando_tratamiento', conv?.data);
+      return;
+    }
+
+    if ((esPrecio || esPromo) && (trat === 'depilacion' || esZonaDepil || nB.includes('depil'))) {
+      await botSend(sock, jid, { text: `Los precios de depilación láser van por zona. Algunos ejemplos:\n\n• Axilas — $22.000\n• Cavado — $23.000\n• Media pierna — $22.000\n• Pierna completa — $26.500\n• Bozo — $12.650\n\nTenemos combos con descuento si hacés varias zonas juntas. ¿Cuáles te interesan?` });
+      setConv(jid, 'esperando_tratamiento', conv?.data);
+      return;
+    }
+
+    if (esPrecio || esPromo) {
+      await botSend(sock, jid, { text: `Los precios dependen del tratamiento. ¿Sobre cuál querés saber?\n\n• Depilación láser\n• Tratamientos faciales (Botox, Endolift, Endymed, HIFU)\n• Reducción corporal (Criolipólisis, enCurve, CM Slim)\n• Consultas médicas ($40.000)\n• Sueroterapia` });
+      setConv(jid, 'esperando_tratamiento', conv?.data);
+      return;
+    }
+
     // Especialidades médicas van directo a agendar (no pasan por alto valor)
     const ESPECIALIDADES = ['ginecologia','endocrinologia','estetica','suero'];
     if (trat && ESPECIALIDADES.includes(trat)) {
