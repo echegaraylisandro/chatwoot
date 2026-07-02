@@ -386,6 +386,27 @@ async function handleMessage(sock, msg) {
   // PASO: mostrar slots disponibles al paciente
   if (conv?.step === 'esperando_horario') {
     const { tratamiento, tipo } = conv.data;
+
+    // Si el paciente pregunta por precios/promos en lugar de elegir horario, responder primero
+    const nBH = normalize(body);
+    const esPrecioH = nBH.includes('precio') || nBH.includes('cuanto sale') || nBH.includes('cuanto cuesta') || nBH.includes('cuanto es') || nBH.includes('valor') || nBH.includes('costo');
+    const esPromoH = nBH.includes('promo') || nBH.includes('descuento') || nBH.includes('oferta') || nBH.includes('combo') || nBH.includes('paquete');
+    const esCuerpoCompletoH = nBH.includes('cuerpo completo') || nBH.includes('cuerpo entero') || nBH.includes('todo el cuerpo');
+    const esZonaH = nBH.includes('axila') || nBH.includes('bikini') || nBH.includes('pierna') || nBH.includes('brazo') || nBH.includes('espalda') || nBH.includes('abdomen') || nBH.includes('bozo') || nBH.includes('cavado') || nBH.includes('gluteo') || nBH.includes('zona');
+
+    if (tratamiento === 'depilacion' || tipo !== 'consulta') {
+      if (esCuerpoCompletoH && (esPrecioH || esPromoH || nBH.includes('depil') || tratamiento === 'depilacion')) {
+        await botSend(sock, jid, { text: `Para cuerpo completo armamos combos a medida. Los más pedidos:\n\n• *Combo Mujer 1* — Axilas + Cavado + Tiro de Cola\n• *Combo Mujer 2* — Axilas + Cavado + ½ Pierna\n• *Combo Mujer 3* — Axilas + Cavado + TdC + Pierna completa\n\nTambién podés elegir las zonas que quieras y te damos precio especial. ¿Qué zonas tenés en mente?` });
+        setConv(jid, 'esperando_tratamiento', { ...conv.data });
+        return;
+      }
+      if ((esPrecioH || esPromoH) && (tratamiento === 'depilacion' || esZonaH || nBH.includes('depil'))) {
+        await botSend(sock, jid, { text: `Los precios de depilación láser van por zona:\n\n• Axilas — $22.000\n• Cavado — $23.000\n• Media pierna — $22.000\n• Pierna completa — $26.500\n• Bozo — $12.650\n\nHaciendo varias zonas juntas te armamos un combo con descuento. ¿Qué zonas te interesan?` });
+        setConv(jid, 'esperando_tratamiento', { ...conv.data });
+        return;
+      }
+    }
+
     const esConsulta = tipo === 'consulta';
     const tratKey = esConsulta ? 'consulta' : (tratamiento || '').toLowerCase();
     // Especialidades médicas — doctor asignado
